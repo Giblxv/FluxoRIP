@@ -1,7 +1,7 @@
 # AGENTS.md — Fluxo RIP (instruções para o Codex)
 
 ## Missão e contexto
-Você está no repositório **Fluxo RIP**, antigo **FORGE**, sistema próprio de gestão de produção para uma gráfica com mais de cinco impressoras DTF e DTF UV genéricas (inclusive Funsun), todas com controladoras **Hoson** via Ethernet e uso de PrintExp no Windows. O projeto começou a partir de uma conversa longa com o usuário; consulte `CODEX_HANDOFF.md`, `HISTORICO_CONVERSA.md` e `docs/` antes de fazer mudanças importantes.
+Você está no repositório **Fluxo RIP**, antigo **FORGE**, sistema próprio de gestão de produção para uma gráfica com mais de cinco impressoras DTF e DTF UV genéricas (inclusive Funsun), todas com controladoras **Hoson** via Ethernet e uso de PrintExp no Windows. O projeto começou a partir de uma conversa longa com o usuário; consulte `CODEX_HANDOFF.md`, `HISTORICO_CONVERSA.md`, `docs/MAPA_ESTACOES_HOSON.md` e `docs/` antes de fazer mudanças importantes.
 
 ## Regras indispensáveis
 - **Nunca confundir a fila administrativa do Fluxo RIP com a fila real do PrintExp.** Não afirmar impressão, RIP, limpeza, calibração ou status físico confirmado sem prova confiável. Os controles atuais são registros administrativos e observação de arquivos/rede.
@@ -22,6 +22,7 @@ Você está no repositório **Fluxo RIP**, antigo **FORGE**, sistema próprio de
 - Impressões: `app/print_console.py`, `web/prints.js`
 - Scanner: `app/network_scanner.py`, `web/network_scanner.js`
 - Multiestações: `app/station_agent.py`, `app/stations.py`, `app/central_auth.py`
+- Vínculo impressora → estação/porta Ethernet: `app/printer_links.py` e `docs/MAPA_ESTACOES_HOSON.md`
 - Editor: `app/art_editor.py`, `web/art_editor.js`
 - Executável: `forge_launcher.py`, `FORGE.spec`, `INSTALAR_E_ABRIR.bat`, `GERAR_EXECUTAVEL.bat`, `.github/workflows/build-windows.yml`
 - Testes: `tests/` via `python -m unittest discover -s tests -v`
@@ -31,3 +32,8 @@ Você está no repositório **Fluxo RIP**, antigo **FORGE**, sistema próprio de
 2. Leia `CODEX_HANDOFF.md` e `HISTORICO_CONVERSA.md`.
 3. Valide requisitos no Windows, testes Python, inicialização da API e empacotamento `FluxoRIP.exe` com o workflow.
 4. Faça relatório de bloqueios, problemas críticos de segurança e prioridades antes de integração com equipamentos reais.
+
+## Regras adicionais v1.5
+- O cadastro `printer_station_links` representa uma relação administrativa confirmada pelo operador, **não um enlace de controle real**.
+- Permitir IPs iguais apenas em interfaces/estações isoladas; barrar IP duplicado na mesma NIC, sem alterar a configuração do Windows.
+- Antes de editar fluxo de dados do mapa, revisar `tests/test_printer_links.py` e aplicar migração segura/backup.

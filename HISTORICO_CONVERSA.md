@@ -34,5 +34,12 @@
 19. Enviou `Fluxo RIP – Identidade visual.html` e `Fluxo RIP – Motion graphics.html` e pediu integração completa com troca de nome.
 20. v1.4 renomeou marca para **Fluxo RIP**; `FluxoRIP.exe`; logotipo CMY, cores, fontes, animações, assets SVG/ICO e guias. Mantém dados em `%LOCALAPPDATA%\FORGE` por compatibilidade. Historicamente foram reportados 31 testes aprovados e prévia Chromium, mas build real e hardware não comprovados nesta sessão de transferência.
 
+## Fase 7 — v1.5: mapa de impressoras por estação e adaptador Ethernet
+21. Depois da transferência inicial para Codex, usuário pediu para continuar o Fluxo RIP. Foi criada a v1.5, **Mapa Hoson**, para associar impressoras cadastradas a computadores Windows e interfaces Ethernet informadas pelo agente.
+22. A tela de Estações passou a permitir associação e remoção de vínculos; o backend armazena dados na tabela `printer_station_links`, com as rotas GET/PUT/DELETE em `/api/printer-links`.
+23. As regras bloqueiam o mesmo IP em duas impressoras **na mesma interface da mesma estação**, mas aceitam o mesmo IP em redes fisicamente distintas. O estado da interface/agente não comprova impressão em andamento ou disponibilidade física da impressora.
+24. Foram relatados 5 testes de vínculo, teste HTTP local, UI Chromium com dados simulados. A suíte legada completa dependia de `httpx2`; EXE Windows e máquinas físicas ainda não validados nesta conversa.
+25. Usuário pediu novamente para colocar **esta conversa** no Codex. Este pacote agora foi atualizado com o código v1.5; os arquivos de histórico são um resumo fiel dos requisitos, mas NÃO são uma transcrição literal. Para transcrição integral, exportar os dados da conta pelo ChatGPT e selecionar esta conversa com cuidado para remover credenciais antes de fornecer ao Codex.
+
 ## Pedido atual
 Usuário quer "passar toda essa conversa pro Codex". Os arquivos `CODEX_HANDOFF.md`, `AGENTS.md`, este histórico e o código-fonte v1.4 foram agrupados para que o Codex entenda decisões e comece pelo estado atual. Para importar o transcript integral, usar a interface ChatGPT/Codex se oferecer a opção de adicionar chat existente.

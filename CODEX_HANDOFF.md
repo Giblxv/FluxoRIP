@@ -1,6 +1,6 @@
 # CODEX_HANDOFF.md — Contexto do ChatGPT para continuidade no Codex
 
-**Data de preparação:** 31/10/2026. **Projeto:** Fluxo RIP, antigo FORGE. **Estado-base:** código v1.4, identidade visual integrada. Este documento resume a conversa de desenvolvimento e seus requisitos. **Não é uma transcrição literal integral do histórico**: para a transcrição completa, use a função da interface de desktop que permite acrescentar um chat existente do ChatGPT a um chat do Codex, quando disponível.
+**Data de preparação:** 31/10/2026. **Projeto:** Fluxo RIP, antigo FORGE. **Estado-base:** código v1.5, identidade visual integrada e mapa Hoson por estação/porta Ethernet. Este documento resume a conversa de desenvolvimento e seus requisitos. **Não é uma transcrição literal integral do histórico**: para a transcrição completa, use a função da interface de desktop que permite acrescentar um chat existente do ChatGPT a um chat do Codex, quando disponível.
 
 ## 1. Objetivo do usuário
 Criar um software comercial próprio, Windows 10/11, para controlar a **gestão de produção gráfica DTF e DTF UV**, centralizar pedidos/arte/filas/histórico e **integrar gradualmente** com o PrintExp e controladoras Hoson em várias estações. Inspiração funcional e estética do PrintExp, mas não cópia de código proprietário. O usuário deseja automação máxima, interface dinâmica, instalação por poucos cliques, um `FluxoRIP.exe` e um quadro de gestão estilo Trello/Notion.
@@ -30,10 +30,10 @@ Criar um software comercial próprio, Windows 10/11, para controlar a **gestão 
 - Archivo ExtraBold para títulos; Public Sans para corpo, com fallback offline.
 - Motion: intro gotas entrando/registrando e linhas do raster desenhadas (~1,7s); varredura/ripagem conceitual, hot folder, loading, status; **qualquer porcentagem deve usar progresso real**, nunca uma animação que simule progresso técnico como se fosse dado físico.
 
-## 5. Arquitetura e implementação atual (v1.4)
+## 5. Arquitetura e implementação atual (v1.5)
 Backend Python 3.12 FastAPI + SQLAlchemy/SQLite (`app/`); frontend HTML/CSS/JS (`web/`); monitoramento opcional Watchdog; executável unificado com PyInstaller e pywebview/WebView2 (fallback navegador); builds via `INSTALAR_E_ABRIR.bat` ou GitHub Actions. Arquivos de dados persistem em `%LOCALAPPDATA%\FORGE` por retrocompatibilidade. Ver `README.md`, `docs/INSTALACAO_ATUALIZACAO.md`, `docs/CENTRAL_E_ESTACOES.md`, `docs/COMPATIBILIDADE_WINDOWS_10_11.md` e `docs/ESTUDO_PRINTEXP_HOSON.md`.
 
-**Estado comprovado aqui:** repositório com arquivos de código e instruções recebidos da v1.4. Versões anteriores relatavam resultados de testes automatizados (até 31) e screenshots com dados simulados; **não considerar teste em hardware real ou build `.exe` Windows comprovados** sem reproduzir. O ZIP entregue historicamente contém **código-fonte para gerar EXE**, não `FluxoRIP.exe` compilado.
+**Estado comprovado aqui:** arquivos de código e instruções do projeto v1.5, copiados do último pacote entregue na conversa. Versões anteriores relatavam resultados de testes automatizados (até 31) e screenshots com dados simulados; **não considerar teste em hardware real ou build `.exe` Windows comprovados** sem reproduzir. O ZIP entregue historicamente contém **código-fonte para gerar EXE**, não `FluxoRIP.exe` compilado.
 
 ## 6. Histórico de erros encontrados e remediações
 - `No module named uvicorn`: instalação de dependências no Python errado; instalar na `.venv` correta.
@@ -76,3 +76,21 @@ v0.1 API FastAPI + banco; v0.2 base Hoson em observação; v0.3 UI PrintExp + Ka
 - Revisão das funções PrintExp em `docs/ESTUDO_PRINTEXP_HOSON.md` (inclui links dos manuais consultados anteriormente).
 - Documentação da Central, scanner e compatibilidade em `docs/`.
 - README de instalação na raiz.
+
+
+## 8. Novidade v1.5 — mapa de impressoras e estações
+- Nova implementação: `app/printer_links.py`, `web/stations.js`, `docs/MAPA_ESTACOES_HOSON.md` e `tests/test_printer_links.py`.
+- Rotas administrativas: `GET /api/printer-links`, `PUT /api/printer-links/{printer_id}` e `DELETE /api/printer-links/{printer_id}`.
+- Relaciona impressora → estação Windows → interface Ethernet (identificador da NIC). Aceita endereços IP iguais em interfaces isoladas e bloqueia duplicidade de IP na mesma NIC.
+- Diferenciar **status do agente** de **status físico da placa e do PrintExp**. Vínculo cadastrado não confirma conectividade da impressora.
+- Central ainda depende de LAN confiável (HTTP Basic). Antes de produção real, auditar autenticação, persistência e topologia de rede, com backup de `%LOCALAPPDATA%\FORGE`.
+- Documentação: `docs/MAPA_ESTACOES_HOSON.md`.
+
+## 9. Prioridades para o Codex
+1. Auditar e executar toda a suíte de testes, incluindo instalação real do `httpx2` no ambiente correto.
+2. Reproduzir `FluxoRIP.exe` no Windows 10/11 x64, verificar ícones/arquivos empacotados e abertura WebView2/fallback navegador.
+3. Validar Central/Agente em LAN isolada, autenticação, revogação de tokens, backup e recuperação de dados.
+4. Melhorar scanner e o mapa de estações sem confundir ARP/ICMP com identificação comprovada de Hoson.
+5. Só investigar controle supervisionado do PrintExp após obter versão, modelo de placa, documentação/protocolo e autorização operacional. Nunca transmitir comandos por adivinhação.
+
+**Nota de privacidade:** detalhes de credenciais de manutenção podem ter aparecido no chat original. Não transcrevê-los, inseri-los no repo nem publicá-los.

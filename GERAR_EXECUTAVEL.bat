@@ -1,12 +1,12 @@
 @echo off
 setlocal
 cd /d "%~dp0"
-title Fluxo RIP 1.3 - Windows 10 e Windows 11
+title Fluxo RIP 1.5 - Windows 10 e Windows 11
 set "NO_PAUSE=0"
 if /I "%~1"=="--automatico" set "NO_PAUSE=1"
 
 echo ==============================================
-echo   FLUXO RIP 1.4 - COMPILAR PARA WINDOWS 10/11 X64
+echo   FLUXO RIP 1.5 - COMPILAR PARA WINDOWS 10/11 X64
 echo ==============================================
 echo.
 where py >nul 2>&1

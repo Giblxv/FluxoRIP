@@ -1,3 +1,26 @@
+# Fluxo RIP v1.5 — Mapa de impressoras Hoson por estação e porta Ethernet
+
+**Novo recurso:** na aba **Estações**, associe cada impressora cadastrada a um computador Windows e a uma interface Ethernet reportada pelo agente. Esse mapa é **administrativo**, sem comandos para PrintExp/Hoson.
+
+### Para usar
+
+1. Faça backup de `%LOCALAPPDATA%\FORGE` antes de atualizar.
+2. Extraia o projeto, execute `INSTALAR_E_ABRIR.bat` no PC Windows com Python 3.12 x64 e siga o assistente. O executável ainda **precisa ser compilado no Windows**.
+3. Configure um computador como **Central** e inicie os **agentes de estação** nas máquinas conectadas às impressoras (detalhes em `docs/CENTRAL_E_ESTACOES.md`).
+4. No Fluxo RIP, abra **Impressoras** e cadastre os equipamentos, inclusive seus IPs confirmados.
+5. Abra **Estações**, clique em **Associar impressora**, escolha o equipamento e a porta Ethernet informada pelo agente.
+6. Confira a tabela **Mapa Impressoras ↔ Estações / Ethernet**. O vínculo poderá ser alterado ou removido sem afetar a impressora.
+
+**Conflitos de IP:** duas Hoson podem utilizar `192.168.127.10` em **portas Ethernet diferentes**. O Fluxo RIP aceita isso. Se duas impressoras cadastradas usam o **mesmo IP na mesma porta da mesma estação**, a associação é bloqueada até conferir a topologia da rede.
+
+**Informações e limites:** a conectividade exibida é do agente Windows, **não da impressora**. O IP observado por ARP/ping não prova a identidade do equipamento, e o mapeamento não habilita controle de impressão. Uma interface removida ou agente inativo aparece como alerta.
+
+**Documentação detalhada:** [`docs/MAPA_ESTACOES_HOSON.md`](docs/MAPA_ESTACOES_HOSON.md). Os dados existentes são mantidos; a nova tabela `printer_station_links` é criada automaticamente pelo SQLAlchemy.
+
+**Validação desta versão:** 5 testes unitários do mapa, teste HTTP real em loopback e teste da interface no Chromium com respostas simuladas. A suíte legada que depende de `httpx2` deverá rodar no Windows após a instalação das dependências de compilação; o EXE ainda não foi compilado neste ambiente.
+
+---
+
 # Fluxo RIP v1.4 — Identidade visual integrada
 
 **Novo nome do aplicativo: Fluxo RIP.** O software anterior FORGE agora utiliza a identidade visual e motion fornecidos em `Fluxo RIP – Identidade visual.html` e `Fluxo RIP – Motion graphics.html`.

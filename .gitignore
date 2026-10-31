@@ -13,3 +13,6 @@ build/
 dist/
 *.spec.bak
 forge.log
+
+CONTEXTO_CHATGPT_PRIVADO.md
+CHAT_COMPLETO_PRIVADO.md
