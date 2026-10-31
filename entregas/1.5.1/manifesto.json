@@ -1,0 +1,21 @@
+{
+  "version": "1.5.1",
+  "build_environment": "Python 3.12.10 Windows x64, Wine 10, PyInstaller 6.22.3, NSIS 3.11",
+  "digitally_signed": false,
+  "native_windows_validated": false,
+  "motion": "cartoon, manual pause only; no automatic system override",
+  "artifacts": [
+    {
+      "file": "FluxoRIP-1.5.1-Instalador-Windows-x64.exe",
+      "sha256": "d16ce62ef484a3276451fc2d74a49aaec06c7569d24b2c984dc69c9cad0b14cc",
+      "size_bytes": 29001984,
+      "architecture": "Windows PE32+ AMD64"
+    },
+    {
+      "file": "FluxoRIP.exe",
+      "sha256": "c99afaeb81144b232ad9f811e23bf4c0e2a8fb0e97c841c23353de5167d0cc50",
+      "size_bytes": 28879630,
+      "architecture": "Windows PE32+ AMD64"
+    }
+  ]
+}

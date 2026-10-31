@@ -1,0 +1,2 @@
+d16ce62ef484a3276451fc2d74a49aaec06c7569d24b2c984dc69c9cad0b14cc  FluxoRIP-1.5.1-Instalador-Windows-x64.exe
+b244eefbaece41a60f6fd6ae9b3885c90b22d1392a2e8b891fad7aafe514dfa6  FluxoRIP-GitHub-Pages-1.5.1.zip
