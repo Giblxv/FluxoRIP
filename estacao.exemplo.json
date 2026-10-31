@@ -1,0 +1,6 @@
+{
+  "central_url": "http://192.168.1.100:8765",
+  "station_name": "DTF-01",
+  "agent_token": "COLE_A_CHAVE_DA_CENTRAL",
+  "scan_on_start": false
+}

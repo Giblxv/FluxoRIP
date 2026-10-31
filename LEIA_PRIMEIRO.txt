@@ -1,0 +1,9 @@
+Fluxo RIP v1.4 — INSTALACAO MAIS SIMPLES — WINDOWS 10 / WINDOWS 11
+
+1) Extraia o ZIP.
+2) Execute INSTALAR_E_ABRIR.bat.
+3) O arquivo sera criado em dist\FluxoRIP.exe.
+4) Escolha o modo de uso no assistente.
+5) Seus dados antigos continuam em %LOCALAPPDATA%\FORGE.
+
+Nenhum comando e enviado as placas Hoson.

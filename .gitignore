@@ -1,0 +1,15 @@
+.venv/
+__pycache__/
+*.py[cod]
+production.db
+art_storage/
+realesrgan_path.txt
+*.onnx
+*.pth
+.env
+
+.venv-build/
+build/
+dist/
+*.spec.bak
+forge.log
