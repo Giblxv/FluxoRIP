@@ -1,0 +1,112 @@
+/* FORGE v0.9 — Microinterações locais, sem bibliotecas de animação. */
+:root{
+  --motion-fast:125ms;
+  --motion-standard:185ms;
+  --motion-slow:275ms;
+  --motion-ease:cubic-bezier(.2,.7,.2,1);
+  --motion-emphasis:cubic-bezier(.2,.85,.25,1.14);
+}
+/* Alternância fica na barra de status, sem ocupar espaço operacional. */
+.strip-right{display:flex;align-items:center;gap:10px;flex:none}
+.motion-switch{display:inline-flex;align-items:center;gap:6px;border:1px solid #4e6358;border-radius:4px;background:#293b32;color:#bce8c3;font-size:9px;font-weight:800;letter-spacing:.75px;padding:5px 9px;white-space:nowrap;transition:background var(--motion-standard),border-color var(--motion-standard),transform var(--motion-fast)}
+.motion-switch:hover{background:#34513e;border-color:#86bd92}
+.motion-switch:active{transform:scale(.96)}
+.motion-switch-icon{font-size:12px;line-height:1;transition:transform var(--motion-slow)}
+.motion-switch:hover .motion-switch-icon{transform:rotate(45deg)}
+.motion-switch[aria-pressed="false"]{background:#2c3337;color:#96a1a5;border-color:#455056}
+.motion-switch[aria-pressed="false"] .motion-switch-icon{color:#839196}
+/* Ações: sinalizam clique sem deslocar o fluxo da tabela. */
+.action,.mini-btn,.fleet-title button,.close-modal,.view-switch button,.pc-tool,.pc-tab,
+.top-tab,.fleet-item,.art-asset,.pc-job,.pc-job-commands button,
+.pc-list-actions button,.pc-tool-button,.row-link,.motion-switch,
+#primary-btn,#refresh-btn,button[data-art-action],button[data-art-upload],
+button[data-printer-filter],button[data-mode],button[data-close],button[data-job-status],
+button[data-job-move],button[data-art-select],a.action{
+  transition:background-color var(--motion-standard) var(--motion-ease),
+    border-color var(--motion-standard) var(--motion-ease),
+    color var(--motion-standard) var(--motion-ease),
+    box-shadow var(--motion-standard) var(--motion-ease),
+    filter var(--motion-fast) ease,
+    transform var(--motion-fast) var(--motion-ease);
+}
+@media(hover:hover) and (pointer:fine){
+  button:not(:disabled):hover,.action:not(:disabled):hover,a.action:hover,
+  .task-card:hover,[role="button"]:not(button):hover{
+    filter:brightness(1.085);
+  }
+  .action:not(:disabled):hover,.mini-btn:not(:disabled):hover,.pc-tool:not(:disabled):hover,
+  .view-switch button:not(:disabled):hover,.pc-list-actions button:not(:disabled):hover,
+  .pc-job-commands button:not(:disabled):hover{transform:translateY(-1px)}
+  .fleet-item:not(:disabled):hover,.art-asset:not(:disabled):hover,.pc-job:not(:disabled):hover{
+    transform:translateX(3px);
+    box-shadow:inset 2px 0 0 rgba(154,218,167,.55);
+  }
+  .top-tab:not(:disabled):hover,.pc-tab:not(:disabled):hover{box-shadow:inset 0 -3px 0 rgba(156,219,163,.38)}
+  .task-card:hover{transform:translateY(-3px);box-shadow:0 8px 16px rgba(0,0,0,.18)}
+  .data-table tbody tr:hover{background:rgba(151,216,168,.075)}
+  .pc-procedure-card:hover{border-color:#607c6e;background:#35423e}
+  .art-tool-section:focus-within{background:rgba(161,216,169,.035)}
+}
+.action:active:not(:disabled),.mini-btn:active:not(:disabled),.pc-tool:active:not(:disabled),
+.pc-tab:active:not(:disabled),.fleet-item:active:not(:disabled),.top-tab:active:not(:disabled),
+.art-asset:active:not(:disabled),.pc-job:active:not(:disabled),.view-switch button:active:not(:disabled){
+  transform:scale(.97);filter:brightness(.94)
+}
+/* Estados selecionados seguem visíveis mesmo quando o cursor sai. */
+.top-tab.active,.fleet-item.selected,.pc-tab.active,.pc-job.selected,.art-asset.active,
+.view-switch button.active{transition:background-color var(--motion-standard),border-color var(--motion-standard),box-shadow var(--motion-standard)}
+.fleet-item.selected,.pc-job.selected,.art-asset.active{box-shadow:inset 3px 0 0 #90d09a}
+.task-card{transition:transform var(--motion-standard) var(--motion-ease),box-shadow var(--motion-standard),border-color var(--motion-standard),opacity var(--motion-standard)}
+.task-card.dragging{transform:scale(.98);opacity:.48;box-shadow:none}
+.lane{transition:border-color var(--motion-standard),background-color var(--motion-standard),box-shadow var(--motion-standard)}
+.lane.drag-over{background:#35453c;box-shadow:inset 0 0 0 2px rgba(144,208,154,.28)}
+/* Inputs e controles: realce progressivo, sem transformações que mudem a área de toque. */
+input:not([type="hidden"]),select,textarea{
+  transition:border-color var(--motion-standard) ease,background-color var(--motion-standard) ease,box-shadow var(--motion-standard) ease;
+}
+input:not([type="hidden"]):focus,select:focus,textarea:focus{border-color:#86c8a0;box-shadow:0 0 0 3px rgba(139,213,140,.13)}
+input[type="checkbox"],input[type="radio"],input[type="range"]{accent-color:#9cdba3;cursor:pointer}
+input[type="checkbox"],input[type="radio"]{transition:filter var(--motion-fast),transform var(--motion-fast)}
+input[type="checkbox"]:active,input[type="radio"]:active{transform:scale(.89)}
+input[type="range"]::-webkit-slider-thumb{transition:box-shadow var(--motion-standard),transform var(--motion-standard)}
+input[type="range"]:hover::-webkit-slider-thumb{transform:scale(1.16);box-shadow:0 0 0 5px rgba(150,220,163,.12)}
+/* Linhas, painéis e previsualizações não saltam ao receber novos dados. */
+.data-table tbody tr{transition:background-color var(--motion-standard) ease}
+.metric,.pc-procedure-card{transition:border-color var(--motion-standard),background-color var(--motion-standard),box-shadow var(--motion-standard)}
+.art-picture img,.pc-preview-stage img{transition:opacity var(--motion-standard) ease,filter var(--motion-standard) ease}
+.connection-light,.fleet-status{transition:background var(--motion-standard),box-shadow var(--motion-standard)}
+/* Entrada de página acontece apenas na troca de abas, não a cada tecla digitada. */
+.motion-page-enter{animation:forge-content-enter var(--motion-slow) var(--motion-ease) both}
+.motion-page-title{animation:forge-title-enter var(--motion-standard) var(--motion-ease) both}
+@keyframes forge-content-enter{from{opacity:.55;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes forge-title-enter{from{opacity:.65;transform:translateX(-5px)}to{opacity:1;transform:translateX(0)}}
+@keyframes forge-ripple{from{transform:translate(-50%,-50%) scale(.1);opacity:.21}to{transform:translate(-50%,-50%) scale(1);opacity:0}}
+@keyframes forge-toast-enter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes forge-dialog-enter{from{opacity:0;transform:translateY(10px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes forge-backdrop-enter{from{background:rgba(0,0,0,0)}to{background:rgba(0,0,0,.65)}}
+@keyframes forge-keypress{0%{box-shadow:0 0 0 0 rgba(143,215,157,.25)}55%{box-shadow:0 0 0 4px rgba(143,215,157,.14)}100%{box-shadow:0 0 0 0 rgba(143,215,157,0)}}
+#toast:not(:empty){animation:forge-toast-enter var(--motion-slow) var(--motion-ease)}
+dialog[open] .dialog-content{animation:forge-dialog-enter var(--motion-slow) var(--motion-ease) both}
+dialog[open]::backdrop{animation:forge-backdrop-enter var(--motion-slow) ease both}
+.fx-pressable{position:relative;isolation:isolate;overflow:hidden}
+.fx-ripple{position:absolute;left:0;top:0;width:16px;height:16px;border-radius:50%;background:rgba(214,255,220,.64);pointer-events:none;z-index:1;will-change:transform,opacity;animation:forge-ripple 380ms var(--motion-ease) forwards}
+.action.primary .fx-ripple,.pc-tab.active .fx-ripple{background:rgba(18,69,31,.32)}
+.fx-keypress{animation:forge-keypress 240ms ease-out}
+/* Movimento desligado ou desabilitado nas opções de acessibilidade do Windows. */
+html.motion-off *,html.motion-off *::before,html.motion-off *::after{
+  animation:none!important;transition:none!important;scroll-behavior:auto!important
+}
+html.motion-off .fx-ripple{display:none}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
+  .fx-ripple{display:none!important}
+  .motion-page-enter,.motion-page-title{transform:none!important}
+}
+@media(max-width:850px){.strip-text,.strip-divider{display:none}.strip-right{gap:5px}.motion-switch{padding:5px 6px}.motion-switch-label{display:none}}
+@media(max-width:560px){.motion-switch{min-width:25px;justify-content:center}.system-strip{padding:0 10px;letter-spacing:.5px}}
+
+/* v0.9.1: feedback para a barra de ações contextuais. */
+.pc-context-action{transition:background-color .16s ease,border-color .16s ease,transform .16s ease,box-shadow .16s ease}
+@media(hover:hover){html:not(.motion-off) .pc-context-action:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 3px 10px rgba(0,0,0,.18)}}
+html.motion-off .pc-context-action{transition:none;transform:none}
+@media(prefers-reduced-motion:reduce){.pc-context-action{transition:none!important;transform:none!important}}

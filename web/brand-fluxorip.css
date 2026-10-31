@@ -1,0 +1,101 @@
+/* FLUXO RIP 1.5 — identidade fornecida pelo usuário (CMY + preto + canal branco). */
+:root {
+  --bg:#101316; --bg2:#14181C; --side:#151A1D;
+  --surface:#181C20; --surface2:#242A30; --surface3:#2B3238;
+  --line:#2A3036; --line2:#39434A;
+  --text:#E8ECEE; --soft:#AEB9BF; --muted:#8B989F;
+  --accent:#00A6D6; --accent2:#E5007D;
+  --yellow:#FFD500; --purple:#DE7BB7; --red:#ED6371;
+  --radius:7px;
+  font-family:'Public Sans','Segoe UI',Arial,sans-serif;
+}
+body,button,input,select,textarea{font-family:'Public Sans','Segoe UI',Arial,sans-serif}
+h1,h2,.brand-copy strong,.page-intro h1,.splash-wordmark{font-family:'Archivo','Arial Narrow',Arial,sans-serif;font-stretch:112%;font-weight:800;letter-spacing:-.02em}
+.app-header{background:#171B1F;border-color:var(--line);height:76px;gap:16px}
+.app-brand{width:182px;gap:10px}
+.logo-mark{width:42px;height:42px;background:#fff;border-radius:10px;letter-spacing:normal;overflow:hidden;flex:none;box-shadow:0 0 0 1px #3b454d}
+.logo-mark img{display:block;width:100%;height:100%}
+.brand-copy strong{font-size:22px;letter-spacing:-.75px;white-space:nowrap;color:#fff;line-height:1}
+.brand-copy span{display:block;font-size:8px;letter-spacing:1.1px;margin-top:5px;color:#94A5AE}
+.brand-copy i{background:#243942;color:#5BD9F7;font-weight:800}
+.top-tab{font-weight:700;color:#9CA9B1;border-bottom-width:3px;padding-inline:13px}
+.top-tab:hover{background:#233039;color:#fff}
+.top-tab.active{background:linear-gradient(0deg,#00A6D613,transparent 90%);border-bottom-color:var(--accent);color:#fff}
+.top-tab.active .tab-symbol{color:var(--accent)}
+.tab-symbol{color:#91ABB8}
+.nav-count{background:#173B49;color:#80DFFF}
+.system-strip{background:#14191C;border-color:#2C353C}
+.strip-left .small-square{color:var(--accent)}
+.mode-label{background:#17333B;border:1px solid #285866;color:#A9E8F2}
+.mode-dot,.connection-light.online,.fleet-status.configured{background:var(--accent)}
+.connection-light.online{box-shadow:0 0 0 3px #00A6D627}
+.fleet{background:#151A1D;border-color:var(--line);min-height:calc(100vh - 110px)}
+.fleet-summary{background:#1F262B;border-color:#35434A;border-radius:7px}
+.fleet-summary-icon{background:#163D49;color:#71DBF3;border-color:#2E6976}
+.fleet-item.selected{background:#163744;border-color:#2A8297}
+.fleet-status.configured{box-shadow:0 0 0 3px #00A6D619}
+.fleet-bottom{background:#14191D;border-color:#2B363D}
+.mode-head,.eyebrow,.metric-number.highlight{color:#39C7EB}
+.action{border-radius:6px}
+.action.primary{color:#07171C;background:var(--accent);border-color:#47C8EC;font-weight:800}
+.action.primary:hover{filter:brightness(1.08);box-shadow:0 4px 17px #00A6D634}
+.action.danger{background:#452634;border-color:#9B356B;color:#FFD7E7}
+.metric,.panel,.loading-card{background:#1A2024;border-color:#313E45;border-radius:8px}
+.panel-header,.data-table th{background:#242B30;border-color:#3B464D}
+.metric{border-top:2px solid #00A6D6}
+.metric:nth-child(2){border-top-color:#E5007D}
+.metric:nth-child(3){border-top-color:#FFD500}
+.metric:nth-child(4){border-top-color:#B8CED9}
+.info-banner{background:#172C35;border-color:#28627A;color:#B3E5F1}
+.info-banner.warn{background:#393221;border-color:#826A25;color:#FFE9A4}
+.data-table tbody tr:hover{background:#25333A}
+.data-table tbody tr.selected{background:#1A3944}
+.row-link:hover{color:#55D4F5}
+.view-switch button.active{background:#19465A;color:#D5F5FC}
+.input,.select{background:#141B20;border-color:#3D4C54;color:#EEF4F6}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.workspace-footer{border-color:#2B383F}
+.pc-shell,.pc-top,.pc-toolbars,.pc-top-brand,.pc-panel-title{border-color:#33424A}
+.pc-shell{background:#161D21}.pc-top{background:#232D33}.pc-top-brand .pc-dot{border-color:var(--accent)}
+.pc-tab.active{background:#193744;border-color:var(--accent);color:#DFF9FD}
+.pc-context-toolbar{background:#1D2A30}
+.pc-context-action{background:#263943;border-color:#375B69;color:#DCEBF0}
+.pc-context-action:hover:not(:disabled){background:#225166;border-color:var(--accent)}
+.pc-context-symbol{color:#39C7EB}
+.pc-job.selected{border-color:var(--accent);background:#1C3A46}
+.pc-job-icon{color:#66CDE5}
+.pc-context-label{color:#92C7D5}
+.pc-context-action:focus-visible{outline-color:var(--accent)}
+.pc-statusbar{border-color:#304551}
+.pc-offline{color:#FFDA63}
+.motion-switch{background:#153943;border-color:#28798F;color:#9AE5F4}
+.motion-switch:hover{background:#215365;border-color:var(--accent)}
+.motion-switch[aria-pressed="false"]{background:#242F35;color:#B0C3CD;border-color:#44555E}
+.brand-loader{width:22px;height:22px;vertical-align:middle;margin-right:8px;animation:brand-breathe 2s ease-in-out infinite}
+@keyframes brand-breathe{50%{transform:scale(.93);opacity:.7}}
+/* Splash com as 3 camadas CMY e linhas raster da identidade fornecida. */
+.brand-splash{position:fixed;inset:0;z-index:9000;display:grid;place-items:center;background:#101316;pointer-events:none;opacity:1;transition:opacity .35s ease;}
+.brand-splash.dismissed{opacity:0;visibility:hidden;transition:opacity .35s ease,visibility 0s .35s}
+.splash-inner{display:flex;align-items:center;gap:21px;flex-wrap:wrap;justify-content:center;padding:20px}
+.brand-splash-icon{width:105px;height:105px;border-radius:23px;overflow:hidden;box-shadow:0 0 0 1px #3D484F,0 0 35px #00A6D61E}
+.brand-splash-icon svg{display:block;width:100%;height:100%}
+.splash-wordmark{font-size:clamp(2.8rem,7vw,4.4rem);font-weight:800;color:#EDF2F4;line-height:1;letter-spacing:-1px}
+.splash-subtitle{flex-basis:100%;text-align:center;letter-spacing:2px;font-size:10px;color:#8FA7B2}
+.brand-splash-icon .ink-c{animation:brand-layer-c .9s cubic-bezier(.2,.8,.2,1) both}
+.brand-splash-icon .ink-m{animation:brand-layer-m .9s .15s cubic-bezier(.2,.8,.2,1) both}
+.brand-splash-icon .ink-y{animation:brand-layer-y .9s .3s cubic-bezier(.2,.8,.2,1) both}
+.brand-splash-icon .raster-line{stroke-dasharray:45;stroke-dashoffset:45;animation:brand-raster .6s .9s ease-out both}
+.splash-wordmark{animation:brand-word .8s .65s cubic-bezier(.2,.8,.2,1) both}
+.splash-subtitle{animation:brand-word .8s .9s cubic-bezier(.2,.8,.2,1) both}
+@keyframes brand-layer-c{from{opacity:0;translate:-34px -26px}to{opacity:1;translate:0 0}}
+@keyframes brand-layer-m{from{opacity:0;translate:34px -20px}to{opacity:1;translate:0 0}}
+@keyframes brand-layer-y{from{opacity:0;translate:0 40px}to{opacity:1;translate:0 0}}
+@keyframes brand-raster{to{stroke-dashoffset:0}}
+@keyframes brand-word{from{opacity:0;transform:translateX(-14px);clip-path:inset(0 100% 0 0)}to{opacity:1;transform:none;clip-path:inset(0 0 0 0)}}
+/* Estados ligados ao andamento administrativo (sem falsa leitura de progresso RIP). */
+.state,.process,.prio{border-radius:5px}
+.state{transition:background .23s ease,border-color .23s ease,color .23s ease}
+@media(max-width:1100px){.app-brand{width:165px}.brand-copy strong{font-size:20px}.top-tab{padding:3px 10px 0}}
+@media(max-width:690px){.app-header{padding:0 9px;gap:8px}.app-brand{width:125px}.logo-mark{width:33px;height:33px}.brand-copy strong{font-size:16px}.brand-copy span{font-size:7px}.splash-inner{flex-direction:column;gap:12px}}
+@media(prefers-reduced-motion:reduce){.brand-splash{display:none!important}.brand-loader{animation:none!important}.brand-splash *{animation:none!important}}
+html.motion-off .brand-splash,html.motion-off .brand-splash *{animation:none!important;transition:none!important}

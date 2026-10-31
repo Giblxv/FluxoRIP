@@ -1,0 +1,19 @@
+/* FORGE Scanner — styling aligned with existing PrintExp-inspired console */
+.scanner-settings{padding:17px;display:flex;gap:13px;align-items:flex-end;flex-wrap:wrap;background:#293136}
+.scanner-form-group{display:flex;flex-direction:column;gap:8px;flex:1;min-width:185px}
+.scanner-form-group:first-child{flex:1.7;min-width:250px}
+.scanner-form-group label{color:#a5b4b6;font-weight:700;font-size:11px}
+.scanner-form-group .input,.scanner-form-group .select{width:100%;min-height:39px}
+.scanner-interface-info{border-top:1px solid #455059;padding:13px 18px;display:flex;flex-wrap:wrap;gap:12px 22px;align-items:center;color:#becacc;font-size:11px}
+.scanner-interface-info strong{color:#aedfb5}.scanner-interface-info b{color:#94a5a8}.scanner-interface-info code,.scanner-guide code{color:#c8e8c9}
+.scanner-caution{color:#eac887}
+.scanner-empty{padding:45px;text-align:center;color:#92a4a9;font-size:12px}
+.scanner-guide{padding:17px 20px;margin-bottom:20px;background:#252d2d;border:1px solid #526754;border-radius:5px}
+.scanner-guide strong{font-size:12px;color:#b1e0b7}.scanner-guide p{font-size:11px;color:#b8c4c2;line-height:1.7;margin:8px 0 0}
+.scanner-progress{position:relative;padding:13px 18px 15px;font-size:11px;background:#27392f;color:#c6ebce;overflow:hidden;border-top:1px solid #46654e}
+.scanner-progress-line{position:absolute;bottom:0;left:0;height:3px;width:30%;background:#9be3a7;animation:scanner-sweep 1.8s ease-in-out infinite alternate}
+@keyframes scanner-sweep{0%{transform:translateX(-100%)}100%{transform:translateX(390%)}}
+.scanner-note{padding:5px 18px;color:#a2b3b8}.scanner-panel{overflow:visible}
+.scanner-metrics .metric-number{font-size:25px}
+@media(max-width:840px){.scanner-settings{align-items:stretch}.scanner-form-group,.scanner-form-group:first-child{min-width:100%}}
+@media(prefers-reduced-motion:reduce){.scanner-progress-line{animation:none}}
