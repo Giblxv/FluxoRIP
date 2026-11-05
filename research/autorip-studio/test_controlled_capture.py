@@ -230,5 +230,27 @@ class ControlledCaptureTests(unittest.TestCase):
             validate_plan(json.loads(path.read_text()))
 
 
+
+    def test_boolean_replicate_rejected_instead_of_equating_true_to_one(self):
+        self.plan["samples"][0]["replicate"] = True
+        with self.assertRaisesRegex(ValueError, "exact types"):
+            validate_plan(self.plan)
+
+    def test_string_replicate_rejected(self):
+        self.plan["samples"][0]["replicate"] = "1"
+        with self.assertRaisesRegex(ValueError, "exact types"):
+            validate_plan(self.plan)
+
+    def test_condition_names_cannot_be_swapped_with_hashes(self):
+        first = self.plan["samples"][0]
+        second = self.plan["samples"][1]
+        first["filename"], second["filename"] = second["filename"], first["filename"]
+        with self.assertRaisesRegex(ValueError, "does not match declared capture"):
+            validate_plan(self.plan)
+
+    def test_filename_casing_is_allowed_but_condition_binding_is_strict(self):
+        self.plan["samples"][0]["filename"] = self.plan["samples"][0]["filename"].upper()
+        self.assertIs(validate_plan(self.plan), self.plan)
+
 if __name__ == "__main__":
     unittest.main()
