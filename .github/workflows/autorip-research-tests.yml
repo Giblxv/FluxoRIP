@@ -25,4 +25,4 @@ jobs:
         run: python -m pip install 'numpy>=1.24,<3'
       - name: Run synthetic-only regression tests
         working-directory: research/autorip-studio
-        run: python -m unittest -v test_ternary_transition test_verified_ternary test_verified_cli
+        run: python -m unittest -v test_ternary_transition test_verified_ternary test_verified_cli test_verify_sample_hashes
