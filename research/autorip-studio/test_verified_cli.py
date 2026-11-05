@@ -64,5 +64,27 @@ class VerifiedCliTests(unittest.TestCase):
         self.assertNotEqual(self.run_cli().returncode, 0)
         self.assertEqual(self.output.read_bytes(), before)
 
+    def test_oversized_manifest_rejected(self):
+        self.manifest.write_text(" " * 4097)
+        self.assertNotEqual(self.run_cli().returncode, 0)
+        self.assertFalse(self.output.exists())
+
+    def test_manifest_symlink_rejected(self):
+        original = self.root / "actual_manifest.json"
+        original.write_text(json.dumps(self.expected))
+        try:
+            self.manifest.symlink_to(original)
+        except (OSError, NotImplementedError):
+            self.skipTest("symlinks unavailable")
+        self.assertNotEqual(self.run_cli().returncode, 0)
+        self.assertFalse(self.output.exists())
+
+    def test_output_same_as_manifest_rejected(self):
+        self.manifest.write_text(json.dumps(self.expected))
+        before = self.manifest.read_bytes()
+        self.output = self.manifest
+        self.assertNotEqual(self.run_cli().returncode, 0)
+        self.assertEqual(self.manifest.read_bytes(), before)
+
 if __name__ == "__main__":
     unittest.main()
