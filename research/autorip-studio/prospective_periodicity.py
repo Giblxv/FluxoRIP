@@ -127,11 +127,15 @@ def _scan_artwork(records, base, *, chunk_bytes):
             "locked_window_share": inside / changed if changed else None,
         }
     reexport_changes = comparisons["50_reexport"]["changed_bytes"]
-    level_changes = comparisons["0_vs_100"]["changed_bytes"]
+    level_counts = {pair: comparisons[pair]["changed_bytes"]
+                    for pair in ("0_vs_50", "50_vs_100", "0_vs_100")}
     if reexport_changes:
         status = "repeatability_confounded"
-    elif level_changes == 0:
+    elif all(value == 0 for value in level_counts.values()):
         status = "no_level_difference_observed"
+    elif level_counts["0_vs_100"] == 0:
+        # Equal endpoints do not imply an unchanged intermediate (50%) export.
+        status = "endpoints_equal_intermediate_differs"
     else:
         status = "descriptive_only_no_ink_inference"
     result.update(status=status, comparisons=comparisons,
@@ -150,7 +154,17 @@ def analyze(plan, directory, *, chunk_bytes=1024 * 1024):
     experiments = {}
     for art in ARTWORKS:
         records = [by_key[(art, level, repeat)] for level, repeat in LEVEL_KEYS]
-        experiments[art] = _scan_artwork(records, base, chunk_bytes=chunk_bytes)
+        outcome = _scan_artwork(records, base, chunk_bytes=chunk_bytes)
+        # Preserve reproducibility evidence even when incompatible headers or
+        # candidate geometry prevent an interpretable modular comparison.
+        identical = captured["same_setting_reexport_and_level_checks"][art][
+            "white_50_reexport_byte_identical"]
+        if ("white_50_reexport_byte_identical" in outcome and
+                outcome["white_50_reexport_byte_identical"] != identical):
+            raise ValueError("Payload comparison conflicts with attested whole-file repeatability")
+        outcome["white_50_reexport_byte_identical"] = identical
+        outcome["repeatability_confounded"] = not identical
+        experiments[art] = outcome
     return {
         "schema": "autorip-preregistered-replication-v1",
         "experiment_id": plan["experiment_id"],
@@ -171,6 +185,8 @@ def analyze(plan, directory, *, chunk_bytes=1024 * 1024):
             "An unmatched candidate geometry is not automatically evidence that an unknown protocol lacks periodicity.",
             "The historical phase was not uniquely identified; this version reports results for the chosen fixed phase only.",
             "A nonidentical white-50 reexport confounds attribution of byte differences to white-level settings.",
+            "Identical 0% and 100% endpoints do not imply an unchanged 50% intermediate.",
+            "Repeatability is reported separately even when headers or candidate geometry prevent analysis.",
             "An identical PRT file does not establish printed appearance or physically equal ink deposition.",
             "Metadata checks and repeated SHA-256 scans do not guarantee atomic snapshots on all filesystems.",
         ],
