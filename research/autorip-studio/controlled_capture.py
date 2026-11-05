@@ -75,8 +75,11 @@ def validate_plan(plan):
     for sample in samples:
         if not isinstance(sample, dict) or set(sample) != SAMPLE_FIELDS:
             raise ValueError("Unexpected capture record structure")
+        if (type(sample["artwork"]) is not str or
+                type(sample["level"]) is not str or
+                type(sample["replicate"]) is not int):
+            raise ValueError("Artwork/level/replicate identifiers must use exact types")
         triple = (sample["artwork"], sample["level"], sample["replicate"])
-        # Membership only, avoiding coercion of string levels or arbitrary replicates.
         if triple not in EXPECTED or triple in observed:
             raise ValueError("Unexpected or repeated artwork/white/replicate condition")
         observed.add(triple)
@@ -85,6 +88,9 @@ def validate_plan(plan):
             raise ValueError("Unsafe capture filename (must be plain .PRT basename)")
         if filename.casefold() in file_names:
             raise ValueError("Repeated PRT filename")
+        expected_name = f"{sample['artwork']}_{sample['level']}_r{sample['replicate']}.PRT"
+        if filename.casefold() != expected_name.casefold():
+            raise ValueError("PRT filename does not match declared capture condition")
         file_names.add(filename.casefold())
         if (type(sample["size_bytes"]) is not int or
                 not 48 <= sample["size_bytes"] <= 1024**4):
