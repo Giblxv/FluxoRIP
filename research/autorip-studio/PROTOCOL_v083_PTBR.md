@@ -41,6 +41,27 @@ Adapte para os outros dois arquivos de arte e os outros onze arquivos PRT. Copie
 
 Crie as pastas locais antes de executar os comandos e mantenha os PRTs fora do repositório GitHub.
 
+### Preenchimento automático no PowerShell (alternativa recomendada)
+
+Em vez de copiar manualmente 16 digests, utilize `fill_capture_manifest.ps1`, que calcula hashes com o próprio `Get-FileHash` do Windows e preenche tamanho e SHA-256 de todos os 12 PRTs. Os 3 hashes das artes e o hash do arquivo de configuração também são preenchidos.
+
+~~~powershell
+$coleta = @{
+  Template = "C:\AutoRIP-Piloto\plano.json"
+  SampleDirectory = "C:\AutoRIP-Piloto\amostras"
+  ArtworkA = "C:\AutoRIP-Piloto\art_a.png"
+  ArtworkB = "C:\AutoRIP-Piloto\art_b.png"
+  ArtworkC = "C:\AutoRIP-Piloto\art_c.png"
+  CommonConfig = "C:\AutoRIP-Piloto\config_comum.txt"
+  Output = "C:\AutoRIP-Piloto\plano-preenchido.json"
+}
+.\fill_capture_manifest.ps1 @coleta
+
+py -3.11 controlled_capture.py verify --manifest "C:\AutoRIP-Piloto\plano-preenchido.json" --directory "C:\AutoRIP-Piloto\amostras" --output "C:\AutoRIP-Piloto\relatorio-verificado.json"
+~~~
+
+O script PowerShell se recusa a sobrescrever um manifesto existente. A segunda etapa em Python recalcula os digests independentemente; use o **plano preenchido**, não o modelo vazio. O preenchimento automático ainda depende de que o operador tenha mantido as configurações do RIP constantes e registrado corretamente cada condição.
+
 ## 4. Verificação final
 
 ~~~powershell
