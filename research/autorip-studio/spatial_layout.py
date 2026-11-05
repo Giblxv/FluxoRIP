@@ -16,6 +16,7 @@ def compare_layouts(path, *, max_pairs=240, sample_bytes=512):
     width = min(stride, sample_bytes)
     total_pairs = (rows - 1) * slots
     count = min(max_pairs, total_pairs)
+    # Stratified deterministic selection, spread over the complete logical raster.
     indices = [(i * total_pairs) // count for i in range(count)]
     metrics = {}
     with Path(path).open('rb') as f:

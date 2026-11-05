@@ -31,6 +31,8 @@ def inspect(path, *, max_bytes=None):
         after=os.fstat(f.fileno())
         if (before.st_size, before.st_mtime_ns, before.st_ino) != (after.st_size, after.st_mtime_ns, after.st_ino):
             raise ValueError('file changed during inspection')
+    # These two address functions are permutations of the same payload.
+    # Size and header alone cannot distinguish them.
     return {'source':str(path),'sha256':digest.hexdigest(),'size_bytes':size,
             'header_hex':h.hex(),'fields_u32_le':list(fields),
             'rows_candidate':rows,'stride_candidate':stride,'slots_candidate':slots,

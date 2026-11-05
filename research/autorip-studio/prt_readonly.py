@@ -43,7 +43,11 @@ def inspect_prt(path, *, max_bytes=MAX_FILE_BYTES):
 
 
 def compare_band_bytes(path_a, path_b, *, layout='row-major', max_bytes=MAX_FILE_BYTES):
-    """Compatibilidade com a API antiga; análise real usa ambas as hipóteses."""
+    """Compatibilidade com a API antiga; análise real usa ambas as hipóteses.
+
+    Aceita somente ``row-major`` ou ``plane-major`` e devolve contagens por faixa
+    candidata. Nenhum dos layouts ou canais CMYKW é presumido verdadeiro.
+    """
     lookup = {'row-major': 'row_major', 'plane-major': 'plane_major'}
     if layout not in lookup:
         raise ValueError('Layout inválido')

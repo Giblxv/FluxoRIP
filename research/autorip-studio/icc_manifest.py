@@ -30,6 +30,8 @@ def inventory(root, *, max_files=MAX_PROFILE_COUNT):
     skipped_directories = []
     for current, dirs, names in os.walk(root, topdown=True, followlinks=False):
         here = Path(current)
+        # Do not ever descend into a directory symlink. All subsequent names
+        # are inspected without following a directory link.
         safe_dirs = []
         for name in sorted(dirs, key=lambda n: (n.casefold(), n)):
             candidate = here / name

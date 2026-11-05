@@ -34,6 +34,7 @@ def compare(a, b, *, block_size=65536):
             if len(aa) != n or len(bb) != n:
                 raise ValueError('truncated during comparison')
             hashes[0].update(aa); hashes[1].update(bb)
+            # Each chunk may cross multiple stride boundaries.
             cursor = 0
             while cursor < n:
                 absolute_payload_offset = position + cursor
