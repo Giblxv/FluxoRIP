@@ -30,3 +30,8 @@ jobs:
       - name: Run synthetic-only regression tests
         working-directory: research/autorip-studio
         run: python -m unittest -v test_ternary_transition test_verified_ternary test_verified_cli test_verify_sample_hashes test_modular_holdout_audit test_controlled_capture
+      - name: Windows PowerShell capture smoke (synthetic inputs only)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        working-directory: research/autorip-studio
+        run: ./test_capture_powershell.ps1
