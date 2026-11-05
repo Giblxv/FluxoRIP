@@ -86,5 +86,41 @@ class VerifiedCliTests(unittest.TestCase):
         self.assertNotEqual(self.run_cli().returncode, 0)
         self.assertEqual(self.manifest.read_bytes(), before)
 
+
+    def test_empty_manifest_rejected_without_output(self):
+        self.manifest.write_bytes(b"")
+        self.assertNotEqual(self.run_cli().returncode, 0)
+        self.assertFalse(self.output.exists())
+
+    def test_invalid_json_rejected_without_output(self):
+        self.manifest.write_text("{not-valid-json", encoding="utf-8")
+        self.assertNotEqual(self.run_cli().returncode, 0)
+        self.assertFalse(self.output.exists())
+
+    def test_extra_label_rejected_without_output(self):
+        extra = dict(self.expected)
+        extra["white_25"] = "0" * 64
+        self.manifest.write_text(json.dumps(extra), encoding="utf-8")
+        self.assertNotEqual(self.run_cli().returncode, 0)
+        self.assertFalse(self.output.exists())
+
+    def test_uppercase_digest_rejected_without_output(self):
+        upper = dict(self.expected)
+        upper["white_0"] = upper["white_0"].upper()
+        self.manifest.write_text(json.dumps(upper), encoding="utf-8")
+        self.assertNotEqual(self.run_cli().returncode, 0)
+        self.assertFalse(self.output.exists())
+
+    def test_existing_symlink_output_rejected_without_replacing_target(self):
+        self.manifest.write_text(json.dumps(self.expected), encoding="utf-8")
+        original = self.root / "original.json"
+        original.write_text("sentinel", encoding="utf-8")
+        try:
+            self.output.symlink_to(original)
+        except (OSError, NotImplementedError):
+            self.skipTest("symlink creation unavailable")
+        self.assertNotEqual(self.run_cli().returncode, 0)
+        self.assertEqual(original.read_text(encoding="utf-8"), "sentinel")
+
 if __name__ == "__main__":
     unittest.main()
