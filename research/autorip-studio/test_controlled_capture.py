@@ -88,7 +88,10 @@ class ControlledCaptureTests(unittest.TestCase):
 
     def test_changed_payload_rejected(self):
         rec = self.find("art_c", "white_100")
-        (self.samples_dir / rec["filename"]).write_bytes(b"changed" * 18)
+        path = self.samples_dir / rec["filename"]
+        payload = bytearray(path.read_bytes())
+        payload[-1] ^= 1  # one-byte mutation, same size: specifically test SHA-256 gate
+        path.write_bytes(payload)
         with self.assertRaisesRegex(ValueError, "SHA-256 mismatch"):
             verify_capture_set(self.plan, self.samples_dir)
 
