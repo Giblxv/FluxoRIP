@@ -66,7 +66,7 @@ $json = $plan | ConvertTo-Json -Depth 10
 $stream = [IO.File]::Open($Output, [IO.FileMode]::CreateNew,
                          [IO.FileAccess]::Write, [IO.FileShare]::None)
 try {
-    $writer = New-Object System.IO.StreamWriter($stream, (New-Object System.Text.UTF8Encoding($false)))
+    $writer = [IO.StreamWriter]::new($stream, [Text.UTF8Encoding]::new($false))
     try {
         $writer.Write($json)
         $writer.Write([Environment]::NewLine)
