@@ -227,5 +227,73 @@ class ProspectiveReplicationTests(unittest.TestCase):
         self.assertEqual(json.loads(output.read_text())["verified_capture_count"], 12)
 
 
+
+    def test_equal_endpoints_do_not_hide_intermediate_difference(self):
+        # 0% and 100% are byte-identical, but 50% remains different.
+        art = "art_b"
+        rec0 = self._record(art, "white_0")
+        rec100 = self._record(art, "white_100")
+        original_0 = (self.samples / rec0["filename"]).read_bytes()
+        self._save(rec100, original_0)
+        record = self.result()["artworks"][art]
+        self.assertEqual(record["comparisons"]["0_vs_100"]["changed_bytes"], 0)
+        self.assertGreater(record["comparisons"]["0_vs_50"]["changed_bytes"], 0)
+        self.assertGreater(record["comparisons"]["50_vs_100"]["changed_bytes"], 0)
+        self.assertEqual(record["status"], "endpoints_equal_intermediate_differs")
+        self.assertFalse(record["repeatability_confounded"])
+
+    def test_header_changed_on_50_rerip_keeps_repeatability_warning(self):
+        rec = self._record("art_c", "white_50", 2)
+        raw = bytearray((self.samples / rec["filename"]).read_bytes())
+        raw[6] ^= 1
+        self._save(rec, bytes(raw))
+        report = self.result()
+        result = report["artworks"]["art_c"]
+        self.assertEqual(result["status"], "not_evaluable")
+        self.assertEqual(result["reason"], "headers_not_identical")
+        self.assertFalse(result["white_50_reexport_byte_identical"])
+        self.assertTrue(result["repeatability_confounded"])
+        self.assertTrue(any("art_c" in w for w in report["reexport_warnings"]))
+
+    def test_other_header_change_not_misdiagnosed_as_repeatability(self):
+        rec = self._record("art_c", "white_100", 1)
+        raw = bytearray((self.samples / rec["filename"]).read_bytes())
+        raw[6] ^= 1
+        self._save(rec, bytes(raw))
+        outcome = self.result()["artworks"]["art_c"]
+        self.assertEqual(outcome["status"], "not_evaluable")
+        self.assertEqual(outcome["reason"], "headers_not_identical")
+        self.assertTrue(outcome["white_50_reexport_byte_identical"])
+        self.assertFalse(outcome["repeatability_confounded"])
+
+    def test_geometry_incompatible_and_rerip_changed_both_reported(self):
+        for level, replicate in (("white_0", 1), ("white_50", 1),
+                                 ("white_100", 1), ("white_50", 2)):
+            rec = self._record("art_a", level, replicate)
+            raw = bytearray((self.samples / rec["filename"]).read_bytes())
+            struct.pack_into("<I", raw, 12, WINDOW + 3)
+            self._save(rec, bytes(raw))
+        rerecord = self._record("art_a", "white_50", 2)
+        reraw = bytearray((self.samples / rerecord["filename"]).read_bytes())
+        reraw[-1] ^= 1
+        self._save(rerecord, bytes(reraw))
+        outcome = self.result()["artworks"]["art_a"]
+        self.assertEqual(outcome["status"], "not_evaluable")
+        self.assertEqual(outcome["reason"], "does_not_match_locked_candidate_geometry")
+        self.assertTrue(outcome["repeatability_confounded"])
+
+    def test_reexport_flag_consistent_across_all_evaluable_artworks(self):
+        report = self.result()
+        for art in ARTWORKS:
+            self.assertFalse(report["artworks"][art]["repeatability_confounded"])
+            self.assertTrue(report["artworks"][art]["white_50_reexport_byte_identical"])
+            self.assertEqual(report["artworks"][art]["comparisons"]["50_reexport"]["changed_bytes"], 0)
+
+    def test_changing_intermediate_and_both_endpoints_still_not_claimed_as_ink(self):
+        report = self.result()
+        for art in ARTWORKS:
+            self.assertEqual(report["artworks"][art]["status"], "descriptive_only_no_ink_inference")
+            self.assertFalse(report["artworks"][art]["repeatability_confounded"])
+
 if __name__ == "__main__":
     unittest.main()
