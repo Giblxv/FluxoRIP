@@ -15,7 +15,7 @@ Este diretório contém a trilha de pesquisa **experimental e somente leitura** 
 - Não publicar amostras proprietárias, dados de clientes ou credenciais neste repositório público.
 
 ## Estado e proveniência
-Relatórios históricos da conversa mencionam v0.59–v0.64 e testes sintéticos; **não foram importados nem revalidados nesta operação**. Antes de afirmar resultados, verificar bytes, hashes, logs e executar testes no ambiente corrente. Não confundir coerência de JSON anterior com nova leitura binária do PRT.
+A versão experimental v0.69 foi consolidada nesta branch com 20 arquivos Python. A suíte do pacote (75 testes sintéticos) foi executada localmente em Python 3.13.5, inclusive após extrair o ZIP em uma pasta limpa; as 20 fontes/testes publicados coincidem com os arquivos locais pelos hashes Git. Consulte README_v069.md e VALIDATION_v069.md. Isso **não** equivale à validação de PRTs ou ICCs reais ou a testes com impressoras. Os hashes históricos de PRT não foram revalidados.
 
 ## Integração futura
 O FluxoRIP é a camada de gestão; o AutoRIP Studio permanece uma pesquisa separada. Qualquer integração operacional exige homologação, revisão de segurança e testes supervisionados.
