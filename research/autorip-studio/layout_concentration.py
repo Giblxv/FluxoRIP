@@ -10,6 +10,7 @@ from pathlib import Path
 from hashlib import sha256
 import argparse
 import json
+from safe_json_output import write_new_json
 import struct
 import numpy as np
 
@@ -141,8 +142,7 @@ def main():
     if output in {Path(x).resolve() for x in inputs.values()}:
         raise ValueError('Output must not overwrite an input')
     result = analyze_concentration(inputs)
-    output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(json.dumps(result, indent=2) + '\n', encoding='utf-8')
+    write_new_json(output, result)
     print('Scanned', result['geometry_hypothesis'], 'with source hashes:', result['source_sha256'])
 
 
