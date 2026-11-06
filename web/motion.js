@@ -10,6 +10,7 @@
   const animationsAvailable=()=>enabled && !respectsReducedMotion();
   function apply(){
     const reduced=respectsReducedMotion();
+    if(reduced || !enabled)clearPageMotion();
     root.classList.toggle('motion-off',!enabled || reduced);
     const toggle=document.getElementById('motion-toggle');
     if(!toggle)return;
@@ -61,18 +62,29 @@
     setTimeout(()=>target.classList.remove('fx-keypress'),280);
   });
   let previousPage=null;
+  let pageMotionTimer=null;
+  function clearPageMotion(){
+    if(pageMotionTimer!==null){
+      clearTimeout(pageMotionTimer);
+      pageMotionTimer=null;
+    }
+    document.getElementById('view')?.classList.remove('motion-page-enter');
+    document.getElementById('title')?.classList.remove('motion-page-title');
+  }
   function onRender(page){
     if(previousPage===page)return;
     previousPage=page;
+    clearPageMotion();
     if(!animationsAvailable())return;
     const view=document.getElementById('view');
     const title=document.getElementById('title');
     if(!view)return;
-    view.classList.remove('motion-page-enter');
-    title?.classList.remove('motion-page-title');
+    // A short-lived class prevents refreshes within the same page from
+    // reanimating every freshly rendered card or metric.
     void view.offsetWidth;
     view.classList.add('motion-page-enter');
     title?.classList.add('motion-page-title');
+    pageMotionTimer=setTimeout(clearPageMotion,700);
   }
   window.forgeMotionOnRender=onRender;
   // Respeita alterações feitas nas preferências do Windows enquanto o app está aberto.
