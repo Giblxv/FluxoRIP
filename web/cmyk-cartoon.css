@@ -251,3 +251,45 @@ html.motion-off .task-card:not(.dragging):hover {
   .top-tab.active::after { left: 7px; right: 7px; }
   .page-header h1 { font-size: clamp(22px, 5vw, 28px); }
 }
+
+/* Windows High Contrast / forced-colors:
+   gradients and CMYK shadows can disappear, so state must be communicated
+   through native system colors, solid borders and an always-visible focus ring. */
+@media (forced-colors: active) {
+  .app-header { background-image: none; border-bottom: 2px solid CanvasText; }
+  .top-tab.active {
+    color: Highlight;
+    border-bottom: 3px solid Highlight;
+    background: Canvas;
+  }
+  .top-tab.active::after { display: none !important; }
+  .top-tab.active .tab-symbol { color: Highlight; }
+  .action.primary, #primary-btn {
+    color: ButtonText;
+    background: ButtonFace;
+    border: 2px solid ButtonText;
+    box-shadow: none !important;
+  }
+  .action.primary::before, #primary-btn::before { display: none !important; }
+  .page-header .eyebrow::before { background: Highlight; }
+  .metric, .panel, .task-card, .lane { border: 1px solid CanvasText; }
+  .metric { border-top: 3px solid Highlight; }
+  .lane.drag-over { outline: 3px dashed Highlight; }
+  .view-switch button.active, .pc-tab.active {
+    color: Highlight;
+    border-bottom: 2px solid Highlight;
+    box-shadow: none;
+  }
+  #toast:not(:empty) {
+    background: Canvas;
+    color: CanvasText;
+    border: 2px solid CanvasText;
+    border-left: 4px solid Highlight;
+  }
+  #toast.error:not(:empty) { border-left: 4px solid Mark; }
+  :where(.top-tab, .action, .view-switch button, .pc-tab,
+         .task-card, .fleet-item, .motion-switch, .pc-context-action):focus-visible {
+    outline: 3px solid Highlight;
+    outline-offset: 3px;
+  }
+}
