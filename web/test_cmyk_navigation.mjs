@@ -199,4 +199,49 @@ function makeApp() {
   assert.deepEqual(app.tabs.map(t => t.tabIndex), [-1,-1,-1],
     "all unavailable tabs must be removed from keyboard tab order");
 }
+{
+  const app = makeApp();
+  app.tabs[1].focus();
+  app.tabs[1].disabled = true;
+  app.mutateAttribute("disabled");
+  assert.equal(app.state.focused, 0,
+    "focus must return to selected available tab when the focused tab is disabled");
+  assert.deepEqual(app.tabs.map(t => t.tabIndex), [0,-1,-1]);
+}
+{
+  const app = makeApp();
+  app.tabs[2].focus();
+  app.tabs[2].cssHidden = true;
+  app.mutateAttribute("class");
+  assert.equal(app.state.focused, 0,
+    "focus must recover when responsive CSS hides the focused tab");
+}
+{
+  const app = makeApp();
+  app.tabs[1].focus();
+  app.tabs[0].disabled = true;
+  app.tabs[1].ariaHidden = true;
+  app.mutateAttribute("aria-hidden");
+  assert.equal(app.state.focused, 2,
+    "focus must fall back to first available tab if selected tab is unavailable");
+}
+{
+  const app = makeApp();
+  app.tabs[1].focus();
+  app.tabs[1].disabled = true;
+  app.tabs[0].disabled = true;
+  app.tabs[2].disabled = true;
+  app.mutateAttribute("disabled");
+  assert.equal(app.state.focused, 1,
+    "when no tabs are available do not redirect focus to a disabled control");
+  assert.deepEqual(app.tabs.map(t => t.tabIndex), [-1,-1,-1]);
+}
+{
+  const app = makeApp();
+  // Hiding another tab must not move focus from an available tab.
+  app.tabs[0].focus();
+  app.tabs[1].disabled = true;
+  app.mutateAttribute("disabled");
+  assert.equal(app.state.focused, 0);
+}
 console.log("PASS: CMYK keyboard tabs, wrap, Home/End, disabled and reduced motion");
