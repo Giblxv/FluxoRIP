@@ -18,8 +18,12 @@ function makeApp() {
       name,
       disabled: false,
       hidden: false,
+      cssHidden: false,
+      ariaHidden: false,
+      getClientRects() { return this.cssHidden ? [] : [{}]; },
       tabIndex: null,
       getAttribute(attr) {
+        if (attr === "aria-hidden") return this.ariaHidden ? "true" : null;
         return attr === "aria-selected" && state.active === index ? "true" : "false";
       },
       focus() {
@@ -58,7 +62,7 @@ function makeApp() {
     constructor(callback) { observerCallback = callback; }
     observe(target, options) {
       assert.equal(target, nav);
-      assert.equal(options.attributeFilter.join(","), "aria-selected,class");
+      assert.equal(options.attributeFilter.join(","), "aria-selected,aria-hidden,class,hidden,disabled,style");
     }
   }
   runInNewContext(code, {
@@ -140,5 +144,28 @@ function makeApp() {
   app.simulateClick(2);
   assert.deepEqual(app.tabs.map(t => t.tabIndex), [-1,-1,0],
     "mouse activation must update the keyboard tab stop");
+}
+{
+  const app = makeApp();
+  app.tabs[0].cssHidden = true;
+  app.syncSelection();
+  assert.deepEqual(app.tabs.map(t => t.tabIndex), [-1,0,-1],
+    "CSS-hidden selected tab must not trap keyboard focus");
+  app.tabs[0].cssHidden = false;
+  app.tabs[0].ariaHidden = true;
+  app.syncSelection();
+  assert.deepEqual(app.tabs.map(t => t.tabIndex), [-1,0,-1],
+    "aria-hidden selected tab must not be keyboard tab stop");
+  app.tabs[0].ariaHidden = false;
+  app.tabs[1].cssHidden = true;
+  app.tabs[0].focus();
+  app.syncSelection();
+  app.key("ArrowRight");
+  assert.equal(app.state.active, 2, "arrow navigation must skip CSS-hidden tab");
+  app.tabs[1].cssHidden = false;
+  app.tabs[1].ariaHidden = true;
+  app.tabs[0].focus();
+  app.key("ArrowRight");
+  assert.equal(app.state.active, 2, "arrow navigation must skip aria-hidden tab");
 }
 console.log("PASS: CMYK keyboard tabs, wrap, Home/End, disabled and reduced motion");
