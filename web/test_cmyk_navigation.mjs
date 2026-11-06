@@ -80,6 +80,7 @@ function makeApp() {
       }}});
     },
     syncSelection() { observerCallback?.([{attributeName: "aria-selected"}]); },
+    mutateAttribute(name) { observerCallback?.([{attributeName: name}]); },
     key(key, extras = {}) {
       const event = {
         key, altKey: false, ctrlKey: false, metaKey: false,
@@ -167,5 +168,35 @@ function makeApp() {
   app.tabs[0].focus();
   app.key("ArrowRight");
   assert.equal(app.state.active, 2, "arrow navigation must skip aria-hidden tab");
+}
+{
+  const app = makeApp();
+  const expected = [-1,0,-1];
+  const cases = [
+    ["hidden", tab => { tab.hidden = true; }],
+    ["disabled", tab => { tab.disabled = true; }],
+    ["aria-hidden", tab => { tab.ariaHidden = true; }],
+    ["style", tab => { tab.cssHidden = true; }],
+    ["class", tab => { tab.cssHidden = true; }]
+  ];
+  for (const [attribute, change] of cases) {
+    const trial = makeApp();
+    change(trial.tabs[0]);
+    trial.mutateAttribute(attribute);
+    assert.deepEqual(trial.tabs.map(t => t.tabIndex), expected,
+      attribute + " mutation must move tab stop away from unavailable tab");
+    // Re-enable the tab and verify it becomes reachable again.
+    trial.tabs[0].hidden = false;
+    trial.tabs[0].disabled = false;
+    trial.tabs[0].ariaHidden = false;
+    trial.tabs[0].cssHidden = false;
+    trial.mutateAttribute(attribute);
+    assert.deepEqual(trial.tabs.map(t => t.tabIndex), [0,-1,-1],
+      attribute + " restoration must recover selected tab stop");
+  }
+  app.tabs.forEach(tab => { tab.disabled = true; });
+  app.mutateAttribute("disabled");
+  assert.deepEqual(app.tabs.map(t => t.tabIndex), [-1,-1,-1],
+    "all unavailable tabs must be removed from keyboard tab order");
 }
 console.log("PASS: CMYK keyboard tabs, wrap, Home/End, disabled and reduced motion");
