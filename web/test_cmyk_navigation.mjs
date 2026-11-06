@@ -7,6 +7,7 @@ const code = readFileSync(new URL("./cmyk-navigation.js", import.meta.url), "utf
 
 function makeApp() {
   let keyHandler = null;
+  let clickHandler = null;
   let observerCallback = null;
   const state = { active: 0, focused: 0, press: [], scroll: [], prevented: 0,
                   reduced: false, motionOff: false };
@@ -36,8 +37,9 @@ function makeApp() {
   });
   const nav = {
     addEventListener(name, handler) {
-      assert.equal(name, "keydown");
-      keyHandler = handler;
+      if (name === "keydown") keyHandler = handler;
+      else if (name === "click") clickHandler = handler;
+      else assert.fail("Unexpected listener: " + name);
     },
     querySelectorAll() { return tabs; }
   };
@@ -61,10 +63,19 @@ function makeApp() {
   }
   runInNewContext(code, {
     document, window: {matchMedia() { return {matches:state.reduced}; }},
-    MutationObserver: FakeMutationObserver
+    MutationObserver: FakeMutationObserver,
+    queueMicrotask(callback) { callback(); }
   }, {timeout: 1000});
   return {
     tabs, state,
+    simulateClick(index) {
+      state.active = index;
+      clickHandler({target:{closest(selector) {
+        assert.equal(selector, "button.top-tab[role='tab']");
+        return tabs[index];
+      }}});
+    },
+    syncSelection() { observerCallback?.([{attributeName: "aria-selected"}]); },
     key(key, extras = {}) {
       const event = {
         key, altKey: false, ctrlKey: false, metaKey: false,
@@ -111,5 +122,23 @@ function makeApp() {
   app.tabs[1].disabled = true;
   app.key("ArrowRight");
   assert.equal(app.state.active, 2, "must skip disabled tab");
+}
+{
+  const app = makeApp();
+  app.tabs[0].disabled = true;
+  app.syncSelection();
+  assert.deepEqual(app.tabs.map(t => t.tabIndex), [-1,0,-1],
+    "disabled selected tab cannot be keyboard tab stop");
+  app.tabs[0].disabled = false;
+  app.tabs[0].hidden = true;
+  app.syncSelection();
+  assert.deepEqual(app.tabs.map(t => t.tabIndex), [-1,0,-1],
+    "hidden selected tab cannot be keyboard tab stop");
+}
+{
+  const app = makeApp();
+  app.simulateClick(2);
+  assert.deepEqual(app.tabs.map(t => t.tabIndex), [-1,-1,0],
+    "mouse activation must update the keyboard tab stop");
 }
 console.log("PASS: CMYK keyboard tabs, wrap, Home/End, disabled and reduced motion");
