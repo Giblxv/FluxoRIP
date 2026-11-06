@@ -5,23 +5,26 @@
   const root=document.documentElement;
   let enabled=true;
   try{enabled=localStorage.getItem(preferenceKey)!=='false'}catch(_){ /* modo privado */ }
-  const respectsReducedMotion=()=>window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const motionQuery=window.matchMedia('(prefers-reduced-motion: reduce)');
+  const respectsReducedMotion=()=>motionQuery.matches;
   const animationsAvailable=()=>enabled && !respectsReducedMotion();
   function apply(){
-    root.classList.toggle('motion-off',!enabled);
+    const reduced=respectsReducedMotion();
+    root.classList.toggle('motion-off',!enabled || reduced);
     const toggle=document.getElementById('motion-toggle');
     if(!toggle)return;
-    toggle.setAttribute('aria-pressed', String(enabled));
-    toggle.setAttribute('aria-label', enabled ? 'Desativar animações da interface' : 'Ativar animações da interface');
-    toggle.querySelector('.motion-switch-label').textContent=respectsReducedMotion()?'MOV. REDUZIDO':enabled?'MOTION ON':'MOTION OFF';
-    toggle.title=respectsReducedMotion()?'O Windows prefere movimento reduzido; animações desativadas':enabled?'Desativar microanimações':'Ativar microanimações';
+    toggle.setAttribute('aria-pressed', String(enabled && !reduced));
+    toggle.setAttribute('aria-label', reduced ? 'Animações reduzidas pela preferência do sistema' : enabled ? 'Desativar animações da interface' : 'Ativar animações da interface');
+    toggle.disabled=reduced;
+    toggle.querySelector('.motion-switch-label').textContent=reduced?'MOV. REDUZIDO':enabled?'MOTION ON':'MOTION OFF';
+    toggle.title=reduced?'O sistema prefere movimento reduzido; controle temporariamente indisponível':enabled?'Desativar microanimações':'Ativar microanimações';
   }
   function targetForEffect(el){
     const hit=el.closest('button:not(:disabled),a.action,a[href][download],.task-card[role="button"]');
     return hit && !hit.closest('[hidden]') ? hit : null;
   }
   document.addEventListener('click',event=>{
-    if(event.target.closest('#motion-toggle')){
+    if(event.target.closest('#motion-toggle') && !respectsReducedMotion()){
       enabled=!enabled;
       try{localStorage.setItem(preferenceKey,String(enabled))}catch(_){ /* modo privado */ }
       apply();
@@ -72,6 +75,9 @@
     title?.classList.add('motion-page-title');
   }
   window.forgeMotionOnRender=onRender;
+  // Respeita alterações feitas nas preferências do Windows enquanto o app está aberto.
+  if(typeof motionQuery.addEventListener==='function')motionQuery.addEventListener('change',apply);
+  else if(typeof motionQuery.addListener==='function')motionQuery.addListener(apply);
   // Script é defer; preserva o padrão nativo de movimento reduzido.
   apply();
   document.addEventListener('DOMContentLoaded',apply,{once:true});
