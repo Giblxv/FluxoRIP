@@ -46,6 +46,8 @@ jobs:
         run: node web/test_cmyk_touch.mjs
       - name: Validate tabpanel semantics (static accessibility smoke)
         run: node web/test_cmyk_tabpanel.mjs
+      - name: Validate Windows high contrast CMYK fallbacks
+        run: node web/test_cmyk_forced_colors.mjs
       - name: Check browser script syntax
         run: |
           node --check web/cmyk-navigation.js
