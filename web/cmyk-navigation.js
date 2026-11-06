@@ -24,6 +24,13 @@
     tabs.forEach((tab, index) => {
       tab.tabIndex = index === current ? 0 : -1;
     });
+    // If a responsive update hides/disables the currently focused tab,
+    // restore focus inside the tablist rather than leaving it stranded.
+    // Never steal focus from a control elsewhere in the application.
+    const focused = document.activeElement;
+    if (tabs.includes(focused) && !isAvailable(focused) && current >= 0) {
+      tabs[current].focus();
+    }
   }
 
   // A mouse click should not strand keyboard users on a tab with tabindex=-1.
