@@ -37,15 +37,15 @@
       <div class="brand-copy"><strong>fluxo rip</strong><span>PRINT CONTROL <i>1.5</i></span></div>
     </div>
     <div class="top-navigation" role="tablist" aria-label="Seções principais">
-      <button role="tab" class="top-tab active" data-page="projects" aria-selected="true"><span class="tab-symbol">▦</span> Projetos</button>
-      <button role="tab" class="top-tab" data-page="art" aria-selected="false"><span class="tab-symbol">◇</span> Editor de Arte</button>
-      <button role="tab" class="top-tab" data-page="prints" aria-selected="false"><span class="tab-symbol">▣</span> Impressões</button>
-      <button role="tab" class="top-tab" data-page="queue" aria-selected="false"><span class="tab-symbol">▤</span> Fila de impressão <span id="queue-badge" class="nav-count">0</span></button>
-      <button role="tab" class="top-tab" data-page="history" aria-selected="false"><span class="tab-symbol">◷</span> Histórico de impressão</button>
-      <button role="tab" class="top-tab" data-page="printers" aria-selected="false"><span class="tab-symbol">▧</span> Impressoras</button>
-      <button role="tab" class="top-tab" data-page="stations" aria-selected="false"><span class="tab-symbol">⌁</span> Estações</button>
-      <button role="tab" class="top-tab" data-page="scanner" aria-selected="false"><span class="tab-symbol">⌕</span> Scanner de rede</button>
-      <button role="tab" class="top-tab" data-page="files" aria-selected="false"><span class="tab-symbol">▥</span> Arquivos</button>
+      <button role="tab" class="top-tab active" id="tab-projects" aria-controls="view" data-page="projects" aria-selected="true"><span class="tab-symbol">▦</span> Projetos</button>
+      <button role="tab" class="top-tab" id="tab-art" aria-controls="view" data-page="art" aria-selected="false"><span class="tab-symbol">◇</span> Editor de Arte</button>
+      <button role="tab" class="top-tab" id="tab-prints" aria-controls="view" data-page="prints" aria-selected="false"><span class="tab-symbol">▣</span> Impressões</button>
+      <button role="tab" class="top-tab" id="tab-queue" aria-controls="view" data-page="queue" aria-selected="false"><span class="tab-symbol">▤</span> Fila de impressão <span id="queue-badge" class="nav-count">0</span></button>
+      <button role="tab" class="top-tab" id="tab-history" aria-controls="view" data-page="history" aria-selected="false"><span class="tab-symbol">◷</span> Histórico de impressão</button>
+      <button role="tab" class="top-tab" id="tab-printers" aria-controls="view" data-page="printers" aria-selected="false"><span class="tab-symbol">▧</span> Impressoras</button>
+      <button role="tab" class="top-tab" id="tab-stations" aria-controls="view" data-page="stations" aria-selected="false"><span class="tab-symbol">⌁</span> Estações</button>
+      <button role="tab" class="top-tab" id="tab-scanner" aria-controls="view" data-page="scanner" aria-selected="false"><span class="tab-symbol">⌕</span> Scanner de rede</button>
+      <button role="tab" class="top-tab" id="tab-files" aria-controls="view" data-page="files" aria-selected="false"><span class="tab-symbol">▥</span> Arquivos</button>
     </div>
     <div class="header-status"><span class="connection-light" id="connection-light"></span><span class="status-copy"><b id="connection-text">Conectando</b><small>Central / servidor local</small></span><span class="head-separator"></span><span class="clock" id="clock">--:--</span></div>
   </header>
@@ -62,7 +62,7 @@
     </aside>
     <main class="workspace">
       <div class="page-header"><div class="page-intro"><div class="eyebrow" id="eyebrow">GERENCIAMENTO DE PRODUÇÃO</div><h1 id="title">Projetos</h1><p id="subtitle">Organize as artes e acompanhe cada pedido até a expedição.</p></div><div class="page-actions"><span class="last-refresh" id="last-refresh">Atualizando...</span><button class="action soft" id="refresh-btn" title="Atualizar dados">↻ <span>Atualizar</span></button><button class="action primary" id="primary-btn">＋ Novo projeto</button></div></div>
-      <div id="view" class="view"><div class="loading-card"><img class="brand-loader" src="/static/assets/fluxo-rip-mark.svg" alt="" /> Iniciando a central de produção...</div></div>
+      <div id="view" class="view" role="tabpanel" aria-labelledby="tab-projects" tabindex="0"><div class="loading-card"><img class="brand-loader" src="/static/assets/fluxo-rip-mark.svg" alt="" /> Iniciando a central de produção...</div></div>
       <footer class="workspace-footer"><span>FLUXO RIP / PRODUÇÃO LOCAL OU CENTRAL</span><span>PrintExp e Hoson: <b>sem telemetria</b> • status informados pelo operador</span><span id="bottom-date"></span></footer>
     </main>
   </div>
