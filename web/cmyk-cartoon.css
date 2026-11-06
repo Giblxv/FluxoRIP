@@ -1,0 +1,210 @@
+/* Fluxo RIP — CMYK spring-motion layer.
+   Original motion language: elastic anticipation, squash-and-stretch, ink trails.
+   Decorative only. No printer status, progress, or telemetry is synthesized. */
+:root {
+  --cartoon-c: #00A6D6;
+  --cartoon-m: #E5007D;
+  --cartoon-y: #FFD500;
+  --cartoon-k: #14171A;
+  --cartoon-spring: cubic-bezier(.18, 1.35, .36, 1);
+  --cartoon-settle: cubic-bezier(.22, 1, .36, 1);
+  --cartoon-pop: 360ms;
+  --cartoon-travel: 460ms;
+}
+/* Every visual accent uses the established CMYK brand, not a new theme. */
+.app-header {
+  background-image: linear-gradient(90deg,
+    var(--cartoon-c) 0 25%, var(--cartoon-m) 25% 50%,
+    var(--cartoon-y) 50% 75%, #C9D4DA 75% 100%);
+  background-size: 100% 3px;
+  background-repeat: no-repeat;
+  background-position: left bottom;
+}
+.top-tab {
+  position: relative;
+  isolation: isolate;
+  transform-origin: 50% 72%;
+}
+.top-tab.active {
+  border-bottom-color: transparent;
+}
+.top-tab.active::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  z-index: 1;
+  bottom: 0;
+  left: 10px;
+  right: 10px;
+  height: 3px;
+  border-radius: 6px 6px 0 0;
+  background: linear-gradient(90deg,
+    var(--cartoon-c) 0 34%,
+    var(--cartoon-m) 34% 67%,
+    var(--cartoon-y) 67% 100%);
+  animation: ink-trail-in 480ms var(--cartoon-spring) both;
+  transform-origin: left;
+}
+.top-tab.active .tab-symbol {
+  animation: ink-icon-pop var(--cartoon-pop) var(--cartoon-spring) both;
+}
+.action.primary,
+#primary-btn {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  transform-origin: 50% 75%;
+  border-radius: 9px;
+  box-shadow: 3px 3px 0 #003746;
+}
+.action.primary::before,
+#primary-btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background: linear-gradient(105deg, transparent 0 24%, #FFFFFF55 42% 49%, transparent 65% 100%);
+  transform: translateX(-140%);
+  opacity: 0;
+  transition: transform 450ms var(--cartoon-settle), opacity 120ms ease;
+}
+@media (hover:hover) and (pointer:fine) {
+  .action.primary:hover:not(:disabled),
+  #primary-btn:hover:not(:disabled) {
+    transform: translate(-1px, -2px) rotate(-.45deg);
+    box-shadow: 5px 5px 0 #003746;
+  }
+  .action.primary:hover:not(:disabled)::before,
+  #primary-btn:hover:not(:disabled)::before {
+    opacity: 1;
+    transform: translateX(140%);
+  }
+  .top-tab:hover:not(:disabled) .tab-symbol {
+    animation: ink-icon-pop 320ms var(--cartoon-spring) both;
+  }
+  .metric:hover, .panel:hover {
+    border-color: #526B78;
+  }
+  .task-card:not(.dragging):hover {
+    border-color: #1BB9DC;
+    box-shadow: 3px 4px 0 #003B49, 0 7px 21px #0004;
+  }
+}
+.action.primary:active:not(:disabled),
+#primary-btn:active:not(:disabled) {
+  transform: translate(2px, 2px) scaleX(1.035) scaleY(.94);
+  box-shadow: 1px 1px 0 #003746;
+  transition-duration: 100ms;
+}
+.page-header .eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.page-header .eyebrow::before {
+  content: "";
+  display: inline-block;
+  flex: none;
+  width: 21px;
+  height: 6px;
+  border-radius: 20px;
+  background: linear-gradient(90deg,
+    var(--cartoon-c) 0 33.33%,
+    var(--cartoon-m) 33.33% 66.66%,
+    var(--cartoon-y) 66.66%);
+}
+.page-header h1 {
+  text-wrap: balance;
+  line-height: 1.1;
+}
+.metric {
+  border-top-width: 3px;
+  transition: border-color 210ms ease, box-shadow 210ms ease;
+}
+.view.motion-page-enter .metric {
+  animation: ink-card-rise 430ms var(--cartoon-spring) backwards;
+}
+.view.motion-page-enter .metric:nth-child(2) { animation-delay: 45ms; }
+.view.motion-page-enter .metric:nth-child(3) { animation-delay: 85ms; }
+.view.motion-page-enter .metric:nth-child(4) { animation-delay: 125ms; }
+.view.motion-page-enter .panel {
+  animation: ink-panel-arrive 380ms var(--cartoon-settle) backwards;
+}
+.view-switch button.active, .pc-tab.active {
+  box-shadow: inset 0 -2px 0 var(--cartoon-c);
+}
+.task-card {
+  transform-origin: 50% 90%;
+  border-radius: 9px;
+}
+.task-card.dragging {
+  animation: none !important;
+  box-shadow: none;
+}
+.lane.drag-over {
+  outline: 2px dashed var(--cartoon-c);
+  background: #182D35;
+}
+#toast:not(:empty) {
+  border-left: 4px solid var(--cartoon-c);
+  animation: ink-toast-bounce 420ms var(--cartoon-spring) both;
+}
+#toast.error:not(:empty) {
+  border-left-color: var(--cartoon-m);
+}
+:where(.top-tab, .action, .view-switch button, .pc-tab, .task-card, .fleet-item):focus-visible {
+  outline: 3px solid var(--cartoon-y);
+  outline-offset: 3px;
+}
+@keyframes ink-trail-in {
+  0% { opacity: .2; transform: scaleX(.06); }
+  70% { opacity: 1; transform: scaleX(1.06); }
+  100% { opacity: 1; transform: scaleX(1); }
+}
+@keyframes ink-icon-pop {
+  0% { transform: translateY(2px) scale(.72, 1.22); }
+  55% { transform: translateY(-3px) scale(1.14, .88); }
+  100% { transform: none; }
+}
+@keyframes ink-card-rise {
+  0% { opacity: .5; transform: translateY(12px) scale(.972, 1.025); }
+  68% { opacity: 1; transform: translateY(-2px) scale(1.008, .992); }
+  100% { opacity: 1; transform: none; }
+}
+@keyframes ink-panel-arrive {
+  0% { opacity: .66; transform: translateY(9px); }
+  100% { opacity: 1; transform: none; }
+}
+@keyframes ink-toast-bounce {
+  0% { opacity: 0; transform: translateY(18px) scale(.94, 1.07); }
+  60% { opacity: 1; transform: translateY(-3px) scale(1.025, .985); }
+  100% { opacity: 1; transform: none; }
+}
+/* Never animate disabled controls or the software-reported equipment states. */
+button:disabled { cursor: not-allowed; }
+@media (prefers-reduced-motion: reduce) {
+  .top-tab.active::after,
+  .top-tab.active .tab-symbol,
+  .view.motion-page-enter .metric,
+  .view.motion-page-enter .panel,
+  #toast:not(:empty) {
+    animation: none !important;
+    transform: none !important;
+  }
+  .action.primary::before, #primary-btn::before { display:none !important; }
+}
+html.motion-off .top-tab.active::after,
+html.motion-off .top-tab.active .tab-symbol,
+html.motion-off .view.motion-page-enter .metric,
+html.motion-off .view.motion-page-enter .panel,
+html.motion-off #toast:not(:empty) {
+  animation: none !important;
+  transform: none !important;
+}
+html.motion-off .action.primary::before,
+html.motion-off #primary-btn::before { display:none !important; }
+@media (max-width: 750px) {
+  .top-tab.active::after { left: 7px; right: 7px; }
+  .page-header h1 { font-size: clamp(22px, 5vw, 28px); }
+}
