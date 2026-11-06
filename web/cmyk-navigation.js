@@ -1,0 +1,58 @@
+/* Fluxo RIP — keyboard navigation for the real tablist.
+   Visual CMYK motion is CSS-only; this module does not change machine state. */
+(() => {
+  "use strict";
+  const nav = document.querySelector(".top-navigation[role='tablist']");
+  if (!nav) return;
+
+  const buttons = () => Array.from(nav.querySelectorAll("button.top-tab[role='tab']"));
+  const activeIndex = (tabs) => {
+    const selected = tabs.findIndex(tab => tab.getAttribute("aria-selected") === "true");
+    return selected < 0 ? 0 : selected;
+  };
+
+  function syncRovingFocus() {
+    const tabs = buttons();
+    const current = activeIndex(tabs);
+    tabs.forEach((tab, index) => {
+      tab.tabIndex = index === current ? 0 : -1;
+    });
+  }
+
+  nav.addEventListener("keydown", event => {
+    if (event.altKey || event.ctrlKey || event.metaKey) return;
+    const keys = ["ArrowLeft", "ArrowRight", "Home", "End"];
+    if (!keys.includes(event.key)) return;
+    const tabs = buttons().filter(tab => !tab.disabled && !tab.hidden);
+    if (!tabs.length) return;
+    if (!tabs.includes(document.activeElement)) return;
+    const index = tabs.indexOf(document.activeElement);
+    const nextIndex =
+      event.key === "Home" ? 0 :
+      event.key === "End" ? tabs.length - 1 :
+      (index + (event.key === "ArrowRight" ? 1 : -1) + tabs.length) % tabs.length;
+    const next = tabs[nextIndex];
+    event.preventDefault();
+    next.focus();
+    // Reuse the app's existing click handler; do not implement another router.
+    next.click();
+    const reduced = window.matchMedia &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    next.scrollIntoView?.({
+      block: "nearest",
+      inline: "nearest",
+      behavior: reduced || document.documentElement.classList.contains("motion-off")
+        ? "auto" : "smooth",
+    });
+    syncRovingFocus();
+  });
+
+  const observer = new MutationObserver(mutations => {
+    if (mutations.some(mutation =>
+        mutation.attributeName === "aria-selected" || mutation.attributeName === "class")) {
+      syncRovingFocus();
+    }
+  });
+  observer.observe(nav, {subtree: true, attributes: true, attributeFilter: ["aria-selected", "class"]});
+  syncRovingFocus();
+})();
