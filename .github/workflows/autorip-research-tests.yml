@@ -38,5 +38,9 @@ jobs:
         run: ./test_capture_powershell.ps1
       - name: Validate CMYK interface keyboard behavior (synthetic DOM)
         run: node web/test_cmyk_navigation.mjs
+      - name: Validate live reduced-motion preferences (synthetic DOM)
+        run: node web/test_motion_preference.mjs
       - name: Check browser script syntax
-        run: node --check web/cmyk-navigation.js
+        run: |
+          node --check web/cmyk-navigation.js
+          node --check web/motion.js
