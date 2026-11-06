@@ -62,12 +62,19 @@
     syncRovingFocus();
   });
 
+  // Recompute on *all* attributes that can change tab availability.
+  // Previously the observer watched hidden/disabled/style but ignored their
+  // notifications, leaving a stale tabIndex=0 on an unavailable tab.
+  const availabilityAttributes = [
+    "aria-selected", "aria-hidden", "class", "hidden", "disabled", "style"
+  ];
   const observer = new MutationObserver(mutations => {
-    if (mutations.some(mutation =>
-        mutation.attributeName === "aria-selected" || mutation.attributeName === "class")) {
+    if (mutations.some(mutation => availabilityAttributes.includes(mutation.attributeName))) {
       syncRovingFocus();
     }
   });
-  observer.observe(nav, {subtree: true, attributes: true, attributeFilter: ["aria-selected", "aria-hidden", "class", "hidden", "disabled", "style"]});
+  observer.observe(nav, {
+    subtree: true, attributes: true, attributeFilter: availabilityAttributes
+  });
   syncRovingFocus();
 })();
