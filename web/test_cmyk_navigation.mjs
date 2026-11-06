@@ -9,6 +9,8 @@ function makeApp() {
   let keyHandler = null;
   let clickHandler = null;
   let observerCallback = null;
+  let resizeHandler = null;
+  const frameQueue = [];
   const state = { active: 0, focused: 0, press: [], scroll: [], prevented: 0,
                   reduced: false, motionOff: false };
   let document;
@@ -66,12 +68,23 @@ function makeApp() {
     }
   }
   runInNewContext(code, {
-    document, window: {matchMedia() { return {matches:state.reduced}; }},
+    document, window: {
+      matchMedia() { return {matches:state.reduced}; },
+      addEventListener(name, handler, options) {
+        assert.equal(name, "resize");
+        assert.equal(options.passive, true);
+        resizeHandler = handler;
+      },
+      requestAnimationFrame(callback) { frameQueue.push(callback); }
+    },
     MutationObserver: FakeMutationObserver,
     queueMicrotask(callback) { callback(); }
   }, {timeout: 1000});
   return {
     tabs, state,
+    resize() { resizeHandler(); },
+    flushFrames() { while (frameQueue.length) frameQueue.shift()(); },
+    pendingFrames() { return frameQueue.length; },
     simulateClick(index) {
       state.active = index;
       clickHandler({target:{closest(selector) {
@@ -243,5 +256,33 @@ function makeApp() {
   app.tabs[1].disabled = true;
   app.mutateAttribute("disabled");
   assert.equal(app.state.focused, 0);
+}
+{
+  const app = makeApp();
+  app.tabs[0].focus();
+  app.tabs[0].cssHidden = true;
+  // A media query hides the tab without touching class/style/hidden attributes.
+  app.resize();
+  assert.equal(app.pendingFrames(), 1);
+  app.resize();
+  app.resize();
+  assert.equal(app.pendingFrames(), 1, "resize bursts should schedule only one layout check");
+  app.flushFrames();
+  assert.equal(app.state.focused, 1, "resize must rescue focus from a CSS-hidden tab");
+  assert.deepEqual(app.tabs.map(t => t.tabIndex), [-1,0,-1]);
+  app.tabs[0].cssHidden = false;
+  app.resize();
+  app.flushFrames();
+  assert.deepEqual(app.tabs.map(t => t.tabIndex), [0,-1,-1],
+    "selected tab must recover after responsive layout makes it visible");
+}
+{
+  const app = makeApp();
+  app.tabs[1].focus();
+  app.tabs[0].cssHidden = true;
+  app.resize();
+  app.flushFrames();
+  assert.equal(app.state.focused, 1,
+    "resizing must not steal focus from an already available tab");
 }
 console.log("PASS: CMYK keyboard tabs, wrap, Home/End, disabled and reduced motion");
