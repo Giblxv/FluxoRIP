@@ -13,11 +13,21 @@
 
   function syncRovingFocus() {
     const tabs = buttons();
-    const current = activeIndex(tabs);
+    const selected = activeIndex(tabs);
+    const current = tabs[selected] && !tabs[selected].disabled && !tabs[selected].hidden
+      ? selected : tabs.findIndex(tab => !tab.disabled && !tab.hidden);
     tabs.forEach((tab, index) => {
       tab.tabIndex = index === current ? 0 : -1;
     });
   }
+
+  // A mouse click should not strand keyboard users on a tab with tabindex=-1.
+  nav.addEventListener("click", event => {
+    if (event.target.closest("button.top-tab[role='tab']")) {
+      // The application click handler may update aria-selected after this listener.
+      queueMicrotask(syncRovingFocus);
+    }
+  });
 
   nav.addEventListener("keydown", event => {
     if (event.altKey || event.ctrlKey || event.metaKey) return;
