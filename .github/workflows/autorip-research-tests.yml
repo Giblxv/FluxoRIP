@@ -40,6 +40,8 @@ jobs:
         run: node web/test_cmyk_navigation.mjs
       - name: Validate live reduced-motion preferences (synthetic DOM)
         run: node web/test_motion_preference.mjs
+      - name: Validate CMYK page motion lifecycle (synthetic DOM)
+        run: node web/test_motion_page.mjs
       - name: Check browser script syntax
         run: |
           node --check web/cmyk-navigation.js
