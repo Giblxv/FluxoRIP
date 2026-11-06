@@ -293,3 +293,26 @@ html.motion-off .task-card:not(.dragging):hover {
     outline-offset: 3px;
   }
 }
+
+/* Motion accessibility: CSS transitions can remain active even when keyframe
+   animations are disabled. Suppress decorative travel for both preferences,
+   while retaining focus outlines, selection colors and status information. */
+@media (prefers-reduced-motion: reduce) {
+  .top-tab, .top-tab .tab-symbol, .action, .action::before,
+  #primary-btn, #primary-btn::before, .metric, .panel,
+  .task-card, .fleet-item, #toast, .motion-switch {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+html.motion-off .top-tab, html.motion-off .top-tab .tab-symbol,
+html.motion-off .action, html.motion-off .action::before,
+html.motion-off #primary-btn, html.motion-off #primary-btn::before,
+html.motion-off .metric, html.motion-off .panel,
+html.motion-off .task-card, html.motion-off .fleet-item,
+html.motion-off #toast, html.motion-off .motion-switch {
+  animation: none !important;
+  transition: none !important;
+  scroll-behavior: auto !important;
+}
