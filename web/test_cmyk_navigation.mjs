@@ -56,7 +56,7 @@ function makeApp() {
     constructor(callback) { observerCallback = callback; }
     observe(target, options) {
       assert.equal(target, nav);
-      assert.deepEqual(options.attributeFilter, ["aria-selected", "class"]);
+      assert.equal(options.attributeFilter.join(","), "aria-selected,class");
     }
   }
   runInNewContext(code, {
