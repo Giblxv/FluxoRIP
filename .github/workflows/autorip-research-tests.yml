@@ -48,6 +48,8 @@ jobs:
         run: node web/test_cmyk_tabpanel.mjs
       - name: Validate Windows high contrast CMYK fallbacks
         run: node web/test_cmyk_forced_colors.mjs
+      - name: Validate reduced-motion transition suppression
+        run: node web/test_cmyk_reduced_transitions.mjs
       - name: Check browser script syntax
         run: |
           node --check web/cmyk-navigation.js
