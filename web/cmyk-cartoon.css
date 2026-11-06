@@ -181,6 +181,28 @@
   60% { opacity: 1; transform: translateY(-3px) scale(1.025, .985); }
   100% { opacity: 1; transform: none; }
 }
+/* Touch-first operator UX: reliable hit targets and stable scrollable navigation.
+   The larger targets do not move or resize during feedback animations. */
+@media (pointer: coarse) {
+  .top-navigation { overscroll-behavior-inline: contain; }
+  .top-tab { min-height: 44px; min-width: 44px; }
+  .action, .mini-btn, .view-switch button, .pc-tab,
+  .pc-context-action, .motion-switch {
+    min-height: 44px;
+  }
+  .fleet-item { min-height: 48px; }
+  .action.primary, #primary-btn {
+    box-shadow: 2px 2px 0 #003746;
+  }
+  /* Hover-only highlights must not remain stuck after a touch. */
+  .top-tab:hover:not(.active) { box-shadow: none; }
+}
+/* Focus must remain visible even when animation has been disabled. */
+:where(.top-tab, .action, .view-switch button, .pc-tab,
+       .task-card, .fleet-item, .motion-switch, .pc-context-action):focus-visible {
+  outline: 3px solid var(--cartoon-y);
+  outline-offset: 3px;
+}
 /* Never animate disabled controls or the software-reported equipment states. */
 button:disabled { cursor: not-allowed; }
 @media (prefers-reduced-motion: reduce) {
