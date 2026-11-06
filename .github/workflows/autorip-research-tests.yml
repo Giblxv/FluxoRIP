@@ -6,6 +6,7 @@ on:
       - research/autorizado-autorip-studio
     paths:
       - 'research/autorip-studio/**'
+      - 'web/**'
       - '.github/workflows/autorip-research-tests.yml'
   workflow_dispatch:
 
@@ -35,3 +36,7 @@ jobs:
         shell: pwsh
         working-directory: research/autorip-studio
         run: ./test_capture_powershell.ps1
+      - name: Validate CMYK interface keyboard behavior (synthetic DOM)
+        run: node web/test_cmyk_navigation.mjs
+      - name: Check browser script syntax
+        run: node --check web/cmyk-navigation.js
