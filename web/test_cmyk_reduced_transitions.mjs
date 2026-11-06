@@ -13,9 +13,9 @@ for (const [i, block] of blocks.entries()) {
   for (const selector of [".top-tab", ".action", "#primary-btn", ".metric", ".panel", ".task-card", "#toast", ".motion-switch"]) {
     assert.ok(block.includes(selector), `missing selector ${selector} in mode ${i}`);
   }
-  assert.match(block, /animation:\\s*none\\s*!important/);
-  assert.match(block, /transition:\\s*none\\s*!important/);
-  assert.match(block, /scroll-behavior:\\s*auto\\s*!important/);
+  assert.match(block, /animation:\s*none\s*!important/);
+  assert.match(block, /transition:\s*none\s*!important/);
+  assert.match(block, /scroll-behavior:\s*auto\s*!important/);
 }
-assert.match(css, /:focus-visible\\s*\\{[^}]*outline:/s, "keyboard focus must remain visible");
+assert.match(css, /:focus-visible\s*\{[^}]*outline:/s, "keyboard focus must remain visible");
 console.log("PASS: system and manual reduced-motion suppress decorative transitions");
