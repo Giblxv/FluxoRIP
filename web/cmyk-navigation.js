@@ -6,6 +6,11 @@
   if (!nav) return;
 
   const buttons = () => Array.from(nav.querySelectorAll("button.top-tab[role='tab']"));
+  // CSS-hidden and aria-hidden tabs must not become keyboard tab stops.
+  const isAvailable = tab => !tab.disabled && !tab.hidden &&
+    tab.getAttribute("aria-hidden") !== "true" &&
+    (typeof tab.getClientRects !== "function" || tab.getClientRects().length > 0);
+
   const activeIndex = (tabs) => {
     const selected = tabs.findIndex(tab => tab.getAttribute("aria-selected") === "true");
     return selected < 0 ? 0 : selected;
@@ -14,8 +19,8 @@
   function syncRovingFocus() {
     const tabs = buttons();
     const selected = activeIndex(tabs);
-    const current = tabs[selected] && !tabs[selected].disabled && !tabs[selected].hidden
-      ? selected : tabs.findIndex(tab => !tab.disabled && !tab.hidden);
+    const current = tabs[selected] && isAvailable(tabs[selected])
+      ? selected : tabs.findIndex(isAvailable);
     tabs.forEach((tab, index) => {
       tab.tabIndex = index === current ? 0 : -1;
     });
@@ -33,7 +38,7 @@
     if (event.altKey || event.ctrlKey || event.metaKey) return;
     const keys = ["ArrowLeft", "ArrowRight", "Home", "End"];
     if (!keys.includes(event.key)) return;
-    const tabs = buttons().filter(tab => !tab.disabled && !tab.hidden);
+    const tabs = buttons().filter(isAvailable);
     if (!tabs.length) return;
     if (!tabs.includes(document.activeElement)) return;
     const index = tabs.indexOf(document.activeElement);
@@ -63,6 +68,6 @@
       syncRovingFocus();
     }
   });
-  observer.observe(nav, {subtree: true, attributes: true, attributeFilter: ["aria-selected", "class"]});
+  observer.observe(nav, {subtree: true, attributes: true, attributeFilter: ["aria-selected", "aria-hidden", "class", "hidden", "disabled", "style"]});
   syncRovingFocus();
 })();
