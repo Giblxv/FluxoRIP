@@ -83,5 +83,17 @@
   observer.observe(nav, {
     subtree: true, attributes: true, attributeFilter: availabilityAttributes
   });
+  // CSS media queries can hide tabs without changing DOM attributes.
+  // Re-evaluate on viewport resize; one frame per burst avoids repeated layout reads.
+  let resizePending = false;
+  function onViewportResize() {
+    if (resizePending) return;
+    resizePending = true;
+    window.requestAnimationFrame(() => {
+      resizePending = false;
+      syncRovingFocus();
+    });
+  }
+  window.addEventListener("resize", onViewportResize, {passive: true});
   syncRovingFocus();
 })();
