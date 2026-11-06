@@ -53,6 +53,8 @@ async function load(){if(state.loading)return;state.loading=true;try{const [orde
 function setPage(page){if(!pages[page])return;state.page=page;state.filter='';state.process='';state.selectedJob=null;state.selectedOrder=null;render();window.location.hash=page;if(page==='art'&&typeof editorLoad==='function')editorLoad();if(page==='prints'&&typeof printsLoad==='function')printsLoad();if(page==='scanner'&&typeof scannerInit==='function')scannerInit();if(page==='stations'&&typeof stationsInit==='function')stationsInit()}
 function render(){const info=pages[state.page];$('#eyebrow').textContent=info[0];$('#title').textContent=info[1];$('#subtitle').textContent=info[2];$('#section-breadcrumb').textContent=info[1].toUpperCase();$('#primary-btn').textContent=info[3];
  document.querySelectorAll('.top-tab').forEach(btn=>{btn.classList.toggle('active',btn.dataset.page===state.page);btn.setAttribute('aria-selected',String(btn.dataset.page===state.page))});
+ // Keep the single dynamically rendered tabpanel labelled by the active section.
+ root.setAttribute('aria-labelledby', 'tab-'+state.page);
  $('#queue-badge').textContent=state.data.jobs.filter(j=>j.status==='AGUARDANDO').length;
  renderFleet();
  root.innerHTML=({projects:projectsView,queue:queueView,history:historyView,printers:printersView,files:filesView,stations:typeof stationsView==='function'?stationsView:()=>empty('Carregando estações...',''),scanner:typeof scannerView==='function'?scannerView:()=>empty('Carregando scanner...',''),prints:typeof printsView==='function'?printsView:()=>empty('Carregando impressões',''),art:typeof artView==='function'?artView:()=>empty('Carregando editor...','')}[state.page])();
