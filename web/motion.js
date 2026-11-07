@@ -82,7 +82,8 @@
     if(previousPage===page)return;
     previousPage=page;
     clearPageMotion();
-    if(!animationsAvailable())return;
+    // Data refreshes while the window is hidden must not schedule entrances.
+    if(!animationsAvailable() || document.hidden)return;
     const view=document.getElementById('view');
     const title=document.getElementById('title');
     if(!view)return;
