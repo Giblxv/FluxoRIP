@@ -9,10 +9,17 @@
   const respectsReducedMotion=()=>motionQuery.matches;
   const animationsAvailable=()=>enabled && !respectsReducedMotion();
   const keypressTimers=new Map();
+  const rippleTimers=new Map();
+  function discardRipple(node){
+    const timer=rippleTimers.get(node);
+    if(timer!==undefined){clearTimeout(timer);rippleTimers.delete(node);}
+    node.remove();
+  }
   function clearTransientEffects(){
     for(const timer of keypressTimers.values())clearTimeout(timer);
     keypressTimers.clear();
-    document.querySelectorAll('.fx-ripple').forEach(node=>node.remove());
+    document.querySelectorAll('.fx-ripple').forEach(discardRipple);
+    for(const [node,timer] of rippleTimers){clearTimeout(timer);rippleTimers.delete(node);}
     document.querySelectorAll('.fx-keypress').forEach(node=>node.classList.remove('fx-keypress'));
     document.querySelectorAll('.fx-pressable').forEach(node=>node.classList.remove('fx-pressable'));
   }
@@ -51,7 +58,7 @@
     // Bound simultaneous ripples on one control during rapid pointer input.
     // Keep other controls independent; the last three gestures remain visible.
     const activeRipples=target.querySelectorAll('.fx-ripple');
-    for(let i=0;i<activeRipples.length-2;i++)activeRipples[i].remove();
+    for(let i=0;i<activeRipples.length-2;i++)discardRipple(activeRipples[i]);
     target.classList.add('fx-pressable');
     const ripple=document.createElement('span');
     ripple.className='fx-ripple';
@@ -63,13 +70,13 @@
     ripple.style.top=`${event.clientY-rect.top}px`;
     target.appendChild(ripple);
     const finish=()=>{
-      ripple.remove();
+      discardRipple(ripple);
       // Do not leave the pressed marker on controls after feedback ends.
       if(!target.querySelector('.fx-ripple'))target.classList.remove('fx-pressable');
     };
     ripple.addEventListener('animationend',finish,{once:true});
     // Fallback for interrupted animations or background tab throttling.
-    setTimeout(finish,600);
+    rippleTimers.set(ripple,setTimeout(finish,600));
   },{passive:true});
   // A second keypress must not let the first timeout cancel newer feedback.
   document.addEventListener('keydown',event=>{
