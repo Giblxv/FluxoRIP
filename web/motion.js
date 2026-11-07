@@ -8,9 +8,16 @@
   const motionQuery=window.matchMedia('(prefers-reduced-motion: reduce)');
   const respectsReducedMotion=()=>motionQuery.matches;
   const animationsAvailable=()=>enabled && !respectsReducedMotion();
+  function clearTransientEffects(){
+    document.querySelectorAll('.fx-ripple').forEach(node=>node.remove());
+    document.querySelectorAll('.fx-keypress').forEach(node=>node.classList.remove('fx-keypress'));
+  }
   function apply(){
     const reduced=respectsReducedMotion();
-    if(reduced || !enabled)clearPageMotion();
+    if(reduced || !enabled){
+      clearPageMotion();
+      clearTransientEffects();
+    }
     root.classList.toggle('motion-off',!enabled || reduced);
     const toggle=document.getElementById('motion-toggle');
     if(!toggle)return;
