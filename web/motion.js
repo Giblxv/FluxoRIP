@@ -48,6 +48,10 @@
     if(!target || target.matches('.task-card') || target.classList.contains('dragging'))return;
     const rect=target.getBoundingClientRect();
     if(!rect.width || !rect.height)return;
+    // Bound simultaneous ripples on one control during rapid pointer input.
+    // Keep other controls independent; the last three gestures remain visible.
+    const activeRipples=target.querySelectorAll('.fx-ripple');
+    for(let i=0;i<activeRipples.length-2;i++)activeRipples[i].remove();
     target.classList.add('fx-pressable');
     const ripple=document.createElement('span');
     ripple.className='fx-ripple';
