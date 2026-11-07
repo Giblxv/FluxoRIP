@@ -42,6 +42,12 @@ listeners.visibilitychange();
 assert.equal(timers.size,0,'hidden tab clears all fallback timers');
 assert.equal(ripples.filter(x=>!x.removed).length,0);
 assert.equal(classes.has('fx-pressable'),false);
+// Synthetic input delivered while hidden must not recreate visual feedback.
+press();
+listeners.keydown({repeat:false,key:'Enter',target:{closest(){return target;}}});
+assert.equal(timers.size,0,'hidden input does not schedule ripple or keyboard timers');
+assert.equal(ripples.filter(x=>!x.removed).length,0);
+assert.equal(classes.has('fx-keypress'),false);
 document.hidden=false;
 press();
 assert.equal(timers.size,1);
@@ -49,4 +55,4 @@ const pending=[...timers.values()];
 pending[0]();
 assert.equal(timers.size,0,'fallback removes its own timer entry');
 assert.equal(classes.has('fx-pressable'),false);
-console.log('PASS: ripple timers cancelled on completion, eviction, hide and timeout');
+console.log('PASS: ripple timers cleaned and hidden input feedback suppressed');
