@@ -28,7 +28,7 @@ jobs:
         shell: powershell
         run: |
           & .\tools\printexp_diagnostic\Diagnosticar-PrintExp.ps1 -OutputDirectory $env:RUNNER_TEMP -NonInteractive -SkipAccessibility
-          if ($LASTEXITCODE -ne 0) { throw 'Collection failed' }
+          if (-not $?) { throw 'Collection failed' }
           $report = Get-ChildItem -Path $env:RUNNER_TEMP -Filter diagnostico.json -Recurse | Select-Object -First 1
           if (-not $report) { throw 'Report missing' }
           $data = Get-Content -LiteralPath $report.FullName -Raw | ConvertFrom-Json
