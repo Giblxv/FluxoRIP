@@ -194,6 +194,15 @@
   .action.primary, #primary-btn {
     box-shadow: 2px 2px 0 #003746;
   }
+  /* Press feedback stays within the original hit target on touchscreen stations.
+     Desktop retains the spring/squash effect; touch avoids target movement. */
+  .top-tab:active:not(:disabled), .action:active:not(:disabled),
+  .mini-btn:active:not(:disabled), .pc-tab:active:not(:disabled),
+  .view-switch button:active:not(:disabled),
+  .fleet-item:active:not(:disabled),
+  .action.primary:active:not(:disabled), #primary-btn:active:not(:disabled) {
+    transform: none;
+  }
   /* Hover-only highlights must not remain stuck after a touch. */
   .top-tab:hover:not(.active) { box-shadow: none; }
 }
