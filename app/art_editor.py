@@ -127,7 +127,8 @@ def encode_image(im: Image.Image, fmt: str, dpi: tuple[int, int]) -> bytes:
 
 def save_revision(db: Session, data: bytes, *, parent: ArtRevision | None,
                   order_code: str | None, operation: str, filename: str,
-                  fmt: str, width: int, height: int, dpi: tuple[int, int]) -> dict:
+                  fmt: str, width: int, height: int, dpi: tuple[int, int],
+                  original_data: bytes | None = None, original_ext: str | None = None) -> dict:
     asset_id = str(uuid.uuid4())
     root_id = parent.root_id if parent else asset_id
     folder = ART_DIR / root_id
@@ -135,9 +136,12 @@ def save_revision(db: Session, data: bytes, *, parent: ArtRevision | None,
     ext = {'PNG': '.png', 'JPEG': '.jpg', 'SVG': '.svg'}[fmt]
     dest = folder / f'{asset_id}{ext}'
     temp = folder / f'{asset_id}.tmp'
+    original_path = folder / ('original_recebido' + original_ext) if original_ext else None
     try:
         temp.write_bytes(data)
         temp.replace(dest)
+        if original_data is not None and original_path is not None:
+            original_path.write_bytes(original_data)
         row = ArtRevision(id=asset_id, root_id=root_id, parent_id=parent.id if parent else None,
                           order_code=order_code, original_name=filename[:255], operation=operation,
                           file_format=fmt, width=width, height=height, dpi_x=dpi[0], dpi_y=dpi[1],
@@ -152,6 +156,8 @@ def save_revision(db: Session, data: bytes, *, parent: ArtRevision | None,
         db.rollback()
         dest.unlink(missing_ok=True)
         temp.unlink(missing_ok=True)
+        if original_path is not None:
+            original_path.unlink(missing_ok=True)
         raise
 
 
@@ -187,6 +193,12 @@ async def upload_art(file: UploadFile = File(...), order_code: str | None = Form
     content = await file.read(MAX_UPLOAD + 1)
     if len(content) > MAX_UPLOAD:
         raise HTTPException(413, 'Arquivo acima de 30 MB.')
+    return import_art_bytes(content, file.filename or 'arte.png', db, order_code)
+
+
+def import_art_bytes(content: bytes, filename: str, db: Session, order_code: str | None = None):
+    if len(content) > MAX_UPLOAD:
+        raise HTTPException(413, 'Arquivo acima de 30 MB.')
     try:
         with Image.open(io.BytesIO(content)) as original:
             if original.format not in ALLOWED:
@@ -201,12 +213,11 @@ async def upload_art(file: UploadFile = File(...), order_code: str | None = Form
             bytes_out = encode_image(image, 'PNG', dpi)
     except (UnidentifiedImageError, OSError, ValueError, Image.DecompressionBombError, Image.DecompressionBombWarning) as exc:
         raise HTTPException(415, 'Não foi possível abrir esta imagem.') from exc
-    result = save_revision(db, bytes_out, parent=None, order_code=order_code,
-                           operation='importada', filename=Path(file.filename or 'arte.png').name,
-                           fmt='PNG', width=image.width, height=image.height, dpi=dpi)
-    # Cópia imutável dos bytes importados; alterações posteriores geram revisões PNG.
     original_ext = {'PNG':'.png','JPEG':'.jpg','WEBP':'.webp','BMP':'.bmp','TIFF':'.tif'}[original.format]
-    (ART_DIR / result['root_id'] / ('original_recebido' + original_ext)).write_bytes(content)
+    result = save_revision(db, bytes_out, parent=None, order_code=order_code,
+                           operation='importada', filename=Path(filename).name,
+                           fmt='PNG', width=image.width, height=image.height, dpi=dpi,
+                           original_data=content, original_ext=original_ext)
     return result
 
 

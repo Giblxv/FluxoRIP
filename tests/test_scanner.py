@@ -62,7 +62,7 @@ class ScannerTests(unittest.TestCase):
         with TestClient(app) as c:
             self.assertEqual(c.get('/static/network_scanner.js').status_code,200)
             self.assertEqual(c.get('/static/network_scanner.css').status_code,200)
-            self.assertIn('Scanner de rede',c.get('/').text)
+            self.assertIn('Scanner de rede',c.get('/gestao').text)
             with patch('app.network_scanner.get_adapters',return_value=ADAPTERS),patch('app.network_scanner.sys.platform','win32'):
                 r=c.get('/api/network/interfaces')
                 self.assertEqual(r.status_code,200)

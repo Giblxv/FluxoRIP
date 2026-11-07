@@ -13,7 +13,7 @@ class Base(DeclarativeBase):
 
 
 def init_db():
-    from app import models, art_editor, print_console, stations, printer_links  # noqa: F401
+    from app import models, art_editor, print_console, stations, printer_links, dtf_studio, dtf_hotfolder  # noqa: F401
     Base.metadata.create_all(bind=engine)
     # Upgrade compatível com a estrutura 0.1 se houver um DB existente.
     additions = {

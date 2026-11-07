@@ -32,7 +32,7 @@ class ForgeIntegrationTests(unittest.TestCase):
         self.assertEqual(self.client.get('/api/system').json()['data_dir'], str(DATA_ROOT))
         page = self.client.get('/')
         self.assertEqual(page.status_code, 200)
-        self.assertIn('Editor de Arte', page.text)
+        self.assertIn('Studio DTF', page.text)
         self.assertEqual(self.client.get('/static/app.js').status_code, 200)
 
     def test_02_queues_and_order(self):
@@ -133,11 +133,11 @@ class ForgeIntegrationTests(unittest.TestCase):
         self.assertIn('forgeMotionOnRender', js.text)
 
     def test_07_console_assets_and_compatibility(self):
-        page = self.client.get('/').text
+        page = self.client.get('/gestao').text
         self.assertIn('data-page="prints"', page)
         self.assertIn('prints.js', page)
         self.assertEqual(self.client.get('/static/prints.js').status_code, 200)
-        self.assertEqual(self.client.get('/api/health').json()['version'], '1.5.0')
+        self.assertEqual(self.client.get('/api/health').json()['version'], '2.0.0')
         self.assertEqual(self.client.get('/api/printers/DTF-01/integration').json()['mode'], 'observe_only')
 
 

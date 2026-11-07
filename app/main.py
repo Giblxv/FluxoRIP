@@ -2,7 +2,8 @@ from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 from fastapi import FastAPI, Depends, HTTPException
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.exceptions import RequestValidationError
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import select, func
 from sqlalchemy.orm import Session
@@ -17,6 +18,8 @@ from app.network_scanner import router as network_scanner_router
 from app.stations import router as station_router
 from app.printer_links import router as printer_links_router
 from app.central_auth import auth_middleware
+from app.dtf_studio import router as studio_router, worker as raster_worker
+from app.dtf_hotfolder import router as hotfolder_router
 
 from app.paths import BUNDLE_ROOT, DATA_ROOT
 from app.windows_compat import windows_details, webview2_runtime
@@ -54,12 +57,24 @@ def validate_assignment(db, printer_id, process):
 async def lifespan(app: FastAPI):
     init_db()
     monitor.start()
-    yield
-    monitor.stop()
+    raster_worker.start()
+    try:
+        yield
+    finally:
+        raster_worker.stop()
+        monitor.stop()
 
 
-app = FastAPI(title='Fluxo RIP — Central de Produção', version='1.5.0', lifespan=lifespan)
+app = FastAPI(title='Fluxo RIP — Studio DTF', version='2.0.0', lifespan=lifespan)
+@app.exception_handler(RequestValidationError)
+async def validation_error(request, exc):
+    # Do not echo arbitrary uploads or NaN/Infinity into JSON error responses.
+    return JSONResponse({'detail': [{k: e[k] for k in ('loc', 'msg', 'type')} for e in exc.errors()]}, status_code=422)
+
+
 app.middleware('http')(auth_middleware)
+app.include_router(studio_router)
+app.include_router(hotfolder_router)
 app.include_router(station_router)
 app.include_router(printer_links_router)
 app.include_router(art_router)
@@ -73,16 +88,21 @@ def home():
     return FileResponse(STATIC / 'index.html')
 
 
+@app.get('/gestao', include_in_schema=False)
+def management():
+    return FileResponse(STATIC / 'management.html')
+
+
 @app.get('/api/health')
 def health():
-    return {'status': 'ok', 'version': '1.5.0', 'integration_mode': 'observe_only',
+    return {'status': 'ok', 'version': '2.0.0', 'integration_mode': 'observe_only',
             'machine_telemetry': False, 'monitor_errors': monitor.last_errors,
             'multi_station':True, 'central_mode': __import__('os').environ.get('FORGE_CENTRAL_MODE') == '1'}
 
 
 @app.get('/api/system')
 def system_info():
-    return {'version': '1.5.0', 'data_dir': str(DATA_ROOT),
+    return {'version': '2.0.0', 'data_dir': str(DATA_ROOT),
             'interface': 'aplicativo local ou central LAN', 'print_control': False,
             'os': windows_details(), 'webview2': webview2_runtime()}
 

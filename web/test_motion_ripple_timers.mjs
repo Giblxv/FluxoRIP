@@ -17,7 +17,12 @@ const document={
   hidden:false,documentElement:{classList:{toggle(){}}},
   addEventListener(name,cb){listeners[name]=cb;},
   getElementById(){return null;},
-  querySelectorAll(selector){return selector==='.fx-ripple'?ripples.filter(x=>!x.removed):[];},
+  querySelectorAll(selector){
+    if(selector==='.fx-ripple')return ripples.filter(x=>!x.removed);
+    if(selector==='.fx-pressable')return classes.has('fx-pressable')?[target]:[];
+    if(selector==='.fx-keypress')return classes.has('fx-keypress')?[target]:[];
+    return [];
+  },
   createElement(){
     const events={};
     return {style:{},removed:false,setAttribute(){},addEventListener(name,cb){events[name]=cb;},

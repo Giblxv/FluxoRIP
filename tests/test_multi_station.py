@@ -78,7 +78,7 @@ class MultiStationTests(unittest.TestCase):
             with TestClient(app) as c:
                 self.assertEqual(c.get('/api/health').status_code,200)
                 self.assertEqual(c.get('/api/stations').status_code,200)
-                self.assertIn('Estações',c.get('/').text)
+                self.assertIn('Estações',c.get('/gestao').text)
 
 
 if __name__=='__main__': unittest.main()
