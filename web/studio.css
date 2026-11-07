@@ -1,4 +1,54 @@
-@import url("https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800;900&family=Public+Sans:wght@400;500;600;700&display=swap");
+/* archivo: latin-ext; SIL Open Font License, see assets/fonts. */
+@font-face {
+  font-family: "Archivo";
+  font-style: normal;
+  font-weight: 600 900;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url(/static/assets/fonts/archivo-latin-ext.woff2) format("woff2");
+  unicode-range:
+    U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304,
+    U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB,
+    U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* archivo: latin; SIL Open Font License, see assets/fonts. */
+@font-face {
+  font-family: "Archivo";
+  font-style: normal;
+  font-weight: 600 900;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url(/static/assets/fonts/archivo-latin.woff2) format("woff2");
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+    U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212,
+    U+2215, U+FEFF, U+FFFD;
+}
+/* public-sans: latin-ext; SIL Open Font License, see assets/fonts. */
+@font-face {
+  font-family: "Public Sans";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url(/static/assets/fonts/public-sans-latin-ext.woff2) format("woff2");
+  unicode-range:
+    U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304,
+    U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB,
+    U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* public-sans: latin; SIL Open Font License, see assets/fonts. */
+@font-face {
+  font-family: "Public Sans";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url(/static/assets/fonts/public-sans-latin.woff2) format("woff2");
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+    U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212,
+    U+2215, U+FEFF, U+FFFD;
+}
+
 :root {
   --cyan: #00a6d6;
   --magenta: #e5007d;
@@ -1847,5 +1897,145 @@ input[type="range"] {
   .selected-art > .icon-button:last-child {
     grid-column: 4;
     grid-row: 1 / 3;
+  }
+}
+/* Production refinements: bounded film pages, real separation proofs and recovery. */
+[hidden] {
+  display: none !important;
+}
+.connection-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  padding: 12px 36px;
+  background: #fff6df;
+  color: #876932;
+  border-bottom: 1px solid #ecddb9;
+  font-size: 11px;
+  line-height: 1.7;
+}
+.page-navigator,
+.proof-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--line);
+  font-size: 10px;
+  color: #74838e;
+}
+.library-navigation {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 20px 0;
+  font-size: 10px;
+  color: #7d8d96;
+}
+.library-navigation > div {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.rotate-art {
+  min-height: 28px;
+  padding: 3px 7px;
+  margin-left: 6px;
+  border-radius: 5px;
+  background: #f0f8fb;
+  color: #1686a6;
+  font-size: 9px;
+}
+.rotate-art:hover {
+  background: #ddf4fc;
+}
+.proof-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin: 20px 0;
+}
+.proof-grid section {
+  min-width: 0;
+}
+.proof-grid h3 {
+  font-size: 10px;
+  line-height: 1.7;
+  color: #687d88;
+  min-height: 34px;
+}
+.proof-image {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 280px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+.proof-image img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+.white-proof {
+  background: #202a30;
+}
+.proof-grid .button {
+  width: 100%;
+  white-space: normal;
+  text-align: center;
+  line-height: 1.6;
+}
+.proof-pagination {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+#asset-dialog-content > .setting-note {
+  margin: 14px 0;
+}
+.pagination-note {
+  margin: 0 0 15px;
+}
+.selection-hint {
+  font-size: 9px;
+  color: #85949d;
+  line-height: 1.7;
+  margin: 0 22px 16px;
+}
+@media (max-width: 700px) {
+  .connection-banner {
+    padding: 12px 18px;
+    flex-direction: column;
+    align-items: start;
+  }
+  .library-navigation {
+    flex-direction: column;
+    align-items: start;
+  }
+  .library-navigation > div {
+    width: 100%;
+    justify-content: space-between;
+    gap: 7px;
+  }
+  .rotate-art {
+    min-height: 32px;
+  }
+  .proof-grid {
+    grid-template-columns: 1fr;
+  }
+  .proof-image {
+    height: 240px;
+  }
+  .proof-grid h3 {
+    min-height: 0;
+  }
+  .proof-pagination {
+    font-size: 9px;
+    gap: 8px;
   }
 }

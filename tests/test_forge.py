@@ -70,12 +70,18 @@ class ForgeIntegrationTests(unittest.TestCase):
             (source / 'production.db').write_bytes(b'database-example')
             (source / 'art_storage' / 'test').mkdir(parents=True)
             (source / 'art_storage' / 'test' / 'print.png').write_bytes(b'image-example')
+            for folder in ('dtf_profiles', 'dtf_exports'):
+                (source / folder).mkdir()
+                (source / folder / 'exemplo').write_bytes(b'dtf-fixture')
             with patch('forge_launcher.DATA_ROOT', target):
                 self.assertTrue(migrate_if_needed(source))
                 self.assertFalse(migrate_if_needed(source))
             self.assertEqual((target / 'production.db').read_bytes(), b'database-example')
             self.assertEqual((target / 'art_storage/test/print.png').read_bytes(), b'image-example')
             self.assertTrue((source / 'production.db').exists())
+            for folder in ('dtf_profiles', 'dtf_exports'):
+                self.assertEqual((target / folder / 'exemplo').read_bytes(), b'dtf-fixture')
+                self.assertEqual((source / folder / 'exemplo').read_bytes(), b'dtf-fixture')
 
 
     def test_05_print_console_profiles(self):

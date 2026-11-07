@@ -16,11 +16,12 @@ from PIL import Image, ImageDraw, ImageOps, UnidentifiedImageError
 from pydantic import BaseModel, Field
 from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, select
 from sqlalchemy.orm import Mapped, Session, mapped_column
+from starlette.concurrency import run_in_threadpool
 
 from app.db import Base, SessionLocal
 from app.models import Order, ProductionEvent
-
 from app.paths import DATA_ROOT
+
 ROOT = DATA_ROOT
 ART_DIR = DATA_ROOT / 'art_storage'
 ART_DIR.mkdir(parents=True, exist_ok=True)
@@ -193,7 +194,7 @@ async def upload_art(file: UploadFile = File(...), order_code: str | None = Form
     content = await file.read(MAX_UPLOAD + 1)
     if len(content) > MAX_UPLOAD:
         raise HTTPException(413, 'Arquivo acima de 30 MB.')
-    return import_art_bytes(content, file.filename or 'arte.png', db, order_code)
+    return await run_in_threadpool(import_art_bytes, content, file.filename or 'arte.png', db, order_code)
 
 
 def import_art_bytes(content: bytes, filename: str, db: Session, order_code: str | None = None):
@@ -203,6 +204,8 @@ def import_art_bytes(content: bytes, filename: str, db: Session, order_code: str
         with Image.open(io.BytesIO(content)) as original:
             if original.format not in ALLOWED:
                 raise HTTPException(415, 'Formato não suportado. Use PNG, JPG, WEBP, BMP ou TIFF.')
+            if getattr(original, 'n_frames', 1) > 1:
+                raise HTTPException(415, 'Arquivo com várias páginas ou animação: separe as páginas em imagens estáticas antes de importar.')
             original.load()
             image = ImageOps.exif_transpose(original)
             validate_dimensions(*image.size)
@@ -291,7 +294,7 @@ def run_vectorize(im: Image.Image, mode: str) -> bytes:
 
 def run_ai_background(im: Image.Image) -> Image.Image:
     try:
-        from rembg import remove, new_session
+        from rembg import new_session, remove
     except ImportError as exc:
         raise HTTPException(409, 'rembg não instalado. Execute INSTALAR_OPCIONAIS.bat.') from exc
     try:

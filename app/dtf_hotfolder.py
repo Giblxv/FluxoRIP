@@ -9,7 +9,7 @@ from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import Field
-from sqlalchemy import Integer, String, Text, select
+from sqlalchemy import Integer, String, Text, literal_column, select
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.art_editor import ART_DIR, MAX_UPLOAD, import_art_bytes
@@ -51,6 +51,7 @@ class HotFolderRequest(StrictModel):
     art_width_mm: float = Field(100, ge=1, le=2000)
     film_width_mm: float = Field(600, ge=50, le=2000)
     margin_mm: float = Field(10, ge=0, le=100)
+    max_page_length_mm: float = Field(1000, ge=50, le=3000)
     gap_mm: float = Field(5, ge=0, le=100)
     dpi: int = Field(300)
     mirror: bool = True
@@ -82,18 +83,24 @@ def sheet_for(config, asset_id, filename):
 @router.get("")
 def get_config():
     with SessionLocal() as db:
-        receipts = db.scalars(select(HotFolderReceipt).limit(100)).all()
+        rows = db.execute(
+            select(HotFolderReceipt, DtfRun)
+            .outerjoin(DtfRun, DtfRun.id == HotFolderReceipt.run_id)
+            .order_by(literal_column("dtf_hotfolder_receipts.rowid").desc())
+            .limit(30)
+        ).all()
         return {
             "settings": settings().model_dump(),
             "last_error": monitor.last_error,
             "receipts": [
                 {
-                    "filename": r.filename,
-                    "status": r.status,
-                    "run_id": r.run_id,
-                    "error": r.error,
+                    "filename": receipt.filename,
+                    "status": run.status if run else receipt.status,
+                    "phase": run.phase if run else None,
+                    "run_id": receipt.run_id,
+                    "error": receipt.error or (run.error if run else None),
                 }
-                for r in receipts
+                for receipt, run in rows
             ],
         }
 

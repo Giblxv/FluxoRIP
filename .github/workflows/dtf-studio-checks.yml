@@ -7,6 +7,8 @@ on:
       - 'web/**'
       - 'tests/**'
       - 'requirements*.txt'
+      - 'forge_launcher.py'
+      - 'FORGE.spec'
       - '.github/workflows/dtf-studio-checks.yml'
   workflow_dispatch:
 
@@ -20,6 +22,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-2022]
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -36,6 +39,7 @@ jobs:
           done
   browser:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -48,10 +52,12 @@ jobs:
         if: always()
         with:
           name: studio-dtf-browser-screenshots
-          path: work/ui-studio/*.png
+          path: |
+            work/ui-studio/*.png
+            work/ui-studio/server-failure.log
           if-no-files-found: ignore
   windows-preview:
-    needs: unit
+    needs: [unit, browser]
     runs-on: windows-2022
     timeout-minutes: 45
     steps:
@@ -68,6 +74,7 @@ jobs:
         shell: pwsh
         env:
           FORGE_NO_DIALOG: '1'
+          FORGE_DTF_RASTER_SMOKE: '1'
         run: |
           $ErrorActionPreference = 'Stop'
           $env:FORGE_DATA_DIR = Join-Path $env:RUNNER_TEMP 'studio-dtf-exe-test'

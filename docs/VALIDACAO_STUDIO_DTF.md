@@ -18,7 +18,7 @@ A fila registra progresso em etapas realmente concluídas. O cancelamento usa at
 
 | Verificação | Resultado |
 | --- | --- |
-| `python -m unittest discover -s tests -v`, com ICC de teste local | **50 testes aprovados** |
+| `python -m unittest discover -s tests -v`, com ICC de teste local | **61 testes aprovados** |
 | Exportação CMYK real | Testada com `/usr/share/color/icc/ghostscript/default_cmyk.icc`; apenas perfil genérico para testar a transformação, não para recomendar cores de produção |
 | Os mesmos testes sem ICC externo | O teste opcional de exportação CMYK é ignorado; os demais não dependem de perfis externos |
 | `python tests/smoke_http.py` | API HTTP real aprovada; regressão das associações administrativas preservada |
@@ -42,12 +42,26 @@ Dois testes antigos de motion tinham simulações de DOM desatualizadas: faltava
 
 - A compilação EXE e o autoteste foram feitos em Windows Server 2022 no GitHub Actions. Execução em Windows 10/11, janela WebView2 e teste físico de impressão continuam pendentes.
 - Não há PRT homologado, retícula de dispositivo, canal spot W integrado, protocolo Hoson ou envio à máquina.
-- Composição por prateleiras, sem rotação e sem garantia de solução ótima; limite de 40 MP e 30.000 px por lado na saída. Sem tiles/paginação automática do rolo.
+- Composição por prateleiras, com rotação manual em passos de 90° e sem garantia de solução ótima. Paginação automática entre artes: até 40 MP e 30.000 px por lado por página, 50 páginas/200 MP no total. Uma arte não é dividida entre páginas. Sem tiles de uma imagem única.
 - Um único worker/processo de servidor; não iniciar múltiplos Uvicorn workers.
-- A prova de branco na interface representa o alfa. O TIFF exportado contém a cobertura e o recuo realmente calculados.
+- Na composição, a visualização Alfa representa a transparência. A conferência de separações usa provas reduzidas dos rasters finais, com cobertura e recuo do branco aplicados. Não é uma simulação de cor física.
 - A pasta automática considera estabilidade observada, não consegue provar que um programa externo concluiu a escrita. Use extensão temporária seguida de renomeação para cópias longas.
 - O modo Central mantém as condições de rede do projeto anterior; uso externo continua exigindo a infraestrutura TLS/VPN já descrita na documentação.
 
 ## Reproduzir
 
-Consulte os comandos em `README.md`, `requirements-test.txt` e `.github/workflows/dtf-studio-checks.yml`. O workflow novo valida backend em Linux/Windows e o fluxo de navegador em Linux. A primeira execução de CI também revelou uma resposta atrasada que recriava o formulário da pasta automática durante o preenchimento. O Studio agora aguarda a configuração inicial e preserva campos editados; o teste de navegador inclui uma leitura atrasada para prevenir essa regressão.
+Consulte os comandos em `README.md`, `requirements-test.txt` e `.github/workflows/dtf-studio-checks.yml`. O workflow novo valida backend em Linux/Windows e o fluxo de navegador em Linux. A primeira execução de CI da entrega inicial também revelou uma resposta atrasada que recriava o formulário da pasta automática durante o preenchimento. O Studio agora aguarda a configuração inicial e preserva campos editados; o teste de navegador inclui uma leitura atrasada para prevenir essa regressão.
+
+## Rodada de refinamento adicional
+
+- Filmes longos são divididos em páginas inteiras, com navegação na composição e no diálogo de separações. O manifesto v2 mantém a posição de todas as cópias e identifica os arquivos de cada página; pacotes antigos de uma página continuam disponíveis.
+- Rotação, medidas físicas, alfa e espelhamento foram verificados em pixels assimétricos conhecidos, incluindo cobertura de branco de 50%. Provas e downloads individuais foram comparados aos bytes dos rasters exportados.
+- A biblioteca busca em todo o banco, com paginação, normalização de acentos e tratamento literal de `%`/`_`. O teste cria mais de 500 revisões sintéticas e encontra uma arte fora do lote inicial. O rascunho recupera referências fora da primeira página.
+- A fila usa respostas compactas e ETag/HTTP 304 quando o estado não muda, evitando retransmitir posições de todas as artes em cada atualização.
+- Importação pesada roda fora do ciclo HTTP; um teste mantém uma importação aguardando e comprova que `/api/health` responde durante o processamento. Entradas animadas ou TIFFs com várias páginas são rejeitados, preservando a necessidade de tratar todas as páginas.
+- A pasta automática mostra os 30 registros mais recentes e o estado atual do trabalho; falhas de acesso à pasta aparecem e desaparecem sem recriar o formulário em edição.
+- Cancelamento entre páginas remove o ZIP parcial. A migração por cópia preserva também `dtf_profiles` e `dtf_exports`, mantendo os originais. Nenhuma coluna/tabela existente foi alterada por esta rodada.
+- O teste de navegador cobre busca paginada, resposta de inspeção atrasada, indisponibilidade temporária da pasta, recuperação de conexão, rotação, exportação multipágina, provas finais, navegação voltar/avançar e largura mobile.
+- O autoteste raster opcional do EXE usa dados temporários e verifica três páginas, máscara branca e TIFF no aplicativo empacotado. A compilação aguarda os testes de backend e navegador.
+
+As fontes Archivo e Public Sans são empacotadas localmente com licenças OFL. O teste de navegador bloqueia HTTPS externo e verifica que o Studio não tenta carregar recursos externos; as fontes e a interface continuam disponíveis na rede local.

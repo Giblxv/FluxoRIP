@@ -4,4 +4,3 @@ pywebview>=5,<7
 pyinstaller>=6.10,<7
 # Dependencia oficial do TestClient do Starlette (testes de compilacao).
 httpx2>=2.13,<3
-vtracer==0.6.15

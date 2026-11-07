@@ -7,16 +7,18 @@ Preparação automática de imagens para DTF, com interface em português, compo
 ## O que está implementado
 
 - Importação múltipla e arrastar/soltar de PNG, JPEG, WEBP, BMP e TIFF RGB, preservando os bytes originais e a transparência.
-- Biblioteca com busca, inspeção de alfa/ICC e remoção de fundo chapado em uma nova revisão.
-- Tamanho físico em milímetros com proporção preservada, cópias, margens e espaçamento.
-- Composição automática por prateleiras, ordenada por altura. É um arranjo determinístico, sem promessa de aproveitamento ótimo.
+- Biblioteca paginada com busca em todo o acervo, sem distinção de acentos, inspeção de alfa/ICC e remoção de fundo chapado em uma nova revisão.
+- Tamanho físico em milímetros com proporção preservada, rotação em passos de 90°, cópias, margens e espaçamento.
+- Composição automática por prateleiras, ordenada por altura, com divisão de filmes longos em páginas sem cortar artes. É um arranjo determinístico, sem promessa de aproveitamento ótimo.
 - Recorte das bordas transparentes, espelhamento do filme inteiro e saída a 150, 300 ou 600 DPI.
 - Avisos de resolução efetiva baixa, entrada sem perfil e fundo opaco.
 - Branco derivado do alfa, com cobertura de 0–100% e recuo da borda de 0–1 mm.
 - Conversão de perfis RGB incorporados para sRGB e saída CMYK quando um ICC CMYK válido é fornecido pelo operador. O branco continua como máscara independente.
+- Provas reduzidas dos rasters finais de cor e branco, com download individual de cada separação por página.
 - Fila persistente, processamento sequencial fora da requisição HTTP, progresso por etapas reais, cancelamento, histórico e reutilização da composição.
 - Pasta automática opcional: aguarda estabilidade por pelo menos seis segundos, importa uma vez cada versão do arquivo e gera um pacote por imagem.
-- Interface responsiva, rascunho local, atalhos de importação (`Ctrl+O`), animações com controle e respeito ao movimento reduzido do sistema.
+- Fontes Archivo/Public Sans incluídas com licença OFL, sem carregamento externo no Studio.
+- Interface responsiva, rascunho local, reconexão automática, navegação voltar/avançar do navegador e atalhos de importação (`Ctrl+O`), animações com controle e respeito ao movimento reduzido do sistema.
 
 ## Limite operacional
 
@@ -59,7 +61,11 @@ Abra `http://127.0.0.1:8765`. Também é possível usar o launcher e o instalado
 5. Clique em **Gerar pacote DTF** e acompanhe **Rasterizações**.
 6. Baixe o ZIP e importe as separações no RIP de impressão compatível.
 
-A visualização de branco na tela é ilustrativa do alfa. O recuo e a cobertura exatos são aplicados ao TIFF final na rasterização.
+Na preparação, **Cor / Alfa** mostra o posicionamento e a transparência. Depois de rasterizar, **Conferir separações** abre provas reduzidas dos rasters finais de cor e branco; a prova W já inclui o recuo e a cobertura aplicados. As provas não simulam a resposta de cor física da impressora e não devem ser usadas como arquivos de impressão.
+
+Defina o **Comprimento máximo por página** para limitar cada arquivo. O limite efetivo também depende do DPI e da largura do filme, mantendo até 40 MP por página. Se o trabalho precisar de várias páginas, o ZIP organiza os rasters em `filme_001/`, `filme_002/` etc. A pasta `previas/` contém apenas provas reduzidas. O comprimento do painel soma as páginas; o navegador da composição permite conferir cada uma. A largura de uma arte é definida **antes da rotação**; a altura acompanha a proporção.
+
+TIFFs com mais de uma página e WEBPs animados devem ser separados em imagens estáticas antes da importação; o aplicativo rejeita esses arquivos para evitar descartar páginas silenciosamente.
 
 ### Pasta automática
 
@@ -79,7 +85,7 @@ Faça backup da pasta de dados antes de atualizar. O banco e as artes existentes
 - O rascunho de composição é salvo no navegador; imagens e pacotes persistem no servidor.
 - Gestão antiga: `/gestao`. Pedidos, scanner e estações saíram da navegação principal; seus dados e APIs permanecem para compatibilidade. Documentação histórica em [README_LEGADO.md](README_LEGADO.md).
 
-Execute **um único processo Uvicorn**, sem `--workers` ou `--reload` durante a produção: a fila e a pasta automática têm um worker local. Limites atuais: 30 MB por arte, 70 MP por entrada, 50 artes/200 cópias por composição, 20 trabalhos ativos, 40 MP/30.000 px por lado na saída. Divida filmes maiores em composições separadas. Não há paginação de rolo ou exportação em tiles nesta versão.
+Execute **um único processo Uvicorn**, sem `--workers` ou `--reload` durante a produção: a fila e a pasta automática têm um worker local. Limites atuais: 30 MB por arte, 70 MP por entrada, 50 artes/200 cópias por composição, 20 trabalhos ativos, 40 MP/30.000 px por lado por página, até 50 páginas e 200 MP por pacote. A paginação ocorre entre artes; uma arte individual precisa caber inteira na página. Não há exportação de uma imagem única em tiles.
 
 ## Validação
 
@@ -94,6 +100,8 @@ python -m playwright install chromium
 python tests/ui_studio.py
 ```
 
-Para usar Chromium já instalado: `FLUXO_BROWSER_EXECUTABLE=/caminho/chromium`. Capturas ficam em `work/ui-studio`, ou no caminho informado por `FLUXO_UI_SCREENSHOTS`. O teste de navegador requer Playwright; não é dependência do aplicativo distribuído.
+Para usar Chromium já instalado: `FLUXO_BROWSER_EXECUTABLE=/caminho/chromium`. Capturas ficam em `work/ui-studio`, ou no caminho informado por `FLUXO_UI_SCREENSHOTS`. O teste de navegador requer Playwright; não é dependência do aplicativo distribuído. VTracer, rembg e Real-ESRGAN continuam opcionais no editor legado e não são exigidos pela compilação do Studio DTF.
+
+O build executa uma prova raster adicional com `FORGE_DTF_RASTER_SMOKE=1` e `--autoteste`, usando uma pasta temporária em `FORGE_DATA_DIR`. Essa opção cria artes e trabalhos sintéticos; use-a apenas com dados de teste isolados. Ela verifica exportação multipágina, rotação, branco, download e leitura TIFF dentro do executável compilado.
 
 Resultados e limites da validação desta entrega: [docs/VALIDACAO_STUDIO_DTF.md](docs/VALIDACAO_STUDIO_DTF.md).

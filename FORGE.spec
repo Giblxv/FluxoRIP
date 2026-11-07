@@ -3,7 +3,7 @@ from pathlib import Path
 from PyInstaller.utils.hooks import collect_submodules
 
 root = Path(SPECPATH)
-hiddenimports = ['clr', 'vtracer'] + collect_submodules('uvicorn')
+hiddenimports = ['clr'] + collect_submodules('uvicorn')
 a = Analysis(
     ['forge_launcher.py'],
     pathex=[str(root)],

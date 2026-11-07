@@ -186,6 +186,7 @@ class DtfStudioTests(unittest.TestCase):
                 row["id"],
                 items=[{"asset_id": row["id"], "width_mm": 40, "copies": 200}],
                 dpi=600,
+                max_page_length_mm=50,
             ),
             self.request(
                 row["id"],
@@ -200,7 +201,7 @@ class DtfStudioTests(unittest.TestCase):
         for case in cases:
             with self.subTest(case=case):
                 response = self.client.post("/api/studio/layout", json=case)
-                self.assertEqual(response.status_code, 422, response.text)
+                self.assertEqual(response.status_code, 422, response.text[:1000])
         response = self.client.post(
             "/api/studio/layout",
             content=json.dumps(self.request(row["id"], gap_mm=float("nan"))),
