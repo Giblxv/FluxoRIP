@@ -3,7 +3,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 const css = readFileSync(new URL("./cmyk-cartoon.css", import.meta.url), "utf8");
-const html = readFileSync(new URL("./index.html", import.meta.url), "utf8");
+const html = readFileSync(new URL("./management.html", import.meta.url), "utf8");
 assert.match(html, /\/static\/cmyk-cartoon\.css\?v=\d+/);
 assert.match(css, /@media\s*\(pointer:\s*coarse\)/);
 const coarse = css.slice(css.indexOf("@media (pointer: coarse)"));

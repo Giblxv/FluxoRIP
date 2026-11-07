@@ -33,6 +33,7 @@ function harness(){
   const document={
     hidden:false,
     documentElement:root,
+    querySelectorAll(){return [];},
     getElementById(id){return {view,title,"motion-toggle":toggle}[id]||null;},
     addEventListener(name,cb){listeners[name]=cb;}
   };

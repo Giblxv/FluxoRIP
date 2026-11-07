@@ -1,0 +1,47 @@
+name: PrintExp diagnostic checks
+
+on:
+  push:
+    branches: [codex/studio-dtf-automatico]
+    paths:
+      - 'tools/printexp_diagnostic/**'
+      - 'tests/test_printexp_diagnostic.ps1'
+      - '.github/workflows/printexp-diagnostic.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  diagnostic:
+    runs-on: windows-2022
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test on Windows PowerShell 5.1
+        shell: powershell
+        run: .\tests\test_printexp_diagnostic.ps1
+      - name: Test on PowerShell 7
+        shell: pwsh
+        run: .\tests\test_printexp_diagnostic.ps1
+      - name: Test actual Windows collection without printers
+        shell: powershell
+        run: |
+          & .\tools\printexp_diagnostic\Diagnosticar-PrintExp.ps1 -OutputDirectory $env:RUNNER_TEMP -NonInteractive -SkipAccessibility
+          if (-not $?) { throw 'Collection failed' }
+          $report = Get-ChildItem -Path $env:RUNNER_TEMP -Filter diagnostico.json -Recurse | Select-Object -First 1
+          if (-not $report) { throw 'Report missing' }
+          $data = Get-Content -LiteralPath $report.FullName -Raw | ConvertFrom-Json
+          if ($data.mode -ne 'observe_only' -or $data.machine_status -ne 'NAO_VERIFICADO') { throw 'Invalid read-only contract' }
+      - name: Package generic scripts only
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path work/diagnostic-package -Force | Out-Null
+          Copy-Item tools/printexp_diagnostic/* work/diagnostic-package/
+          Get-ChildItem work/diagnostic-package -File | Get-FileHash -Algorithm SHA256 | ForEach-Object { "$($_.Hash.ToLowerInvariant())  $(Split-Path $_.Path -Leaf)" } | Set-Content work/diagnostic-package/SHA256SUMS.txt -Encoding utf8
+      - uses: actions/upload-artifact@v4
+        with:
+          name: FluxoRIP-Diagnostico-PrintExp-Windows
+          path: work/diagnostic-package/
+          retention-days: 14
+          if-no-files-found: error

@@ -1,0 +1,103 @@
+name: Studio DTF checks
+
+on:
+  pull_request:
+    paths:
+      - 'app/**'
+      - 'web/**'
+      - 'tests/**'
+      - 'requirements*.txt'
+      - 'forge_launcher.py'
+      - 'FORGE.spec'
+      - '.github/workflows/dtf-studio-checks.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  unit:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-2022]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements-test.txt
+      - run: python -m unittest discover -s tests -v
+      - run: python tests/smoke_http.py
+      - name: Existing motion and navigation regressions
+        shell: bash
+        run: |
+          for script in web/test_*.mjs; do
+            node "$script" || exit 1
+          done
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements-test.txt
+      - run: python -m playwright install --with-deps chromium
+      - run: python tests/ui_studio.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: studio-dtf-browser-screenshots
+          path: |
+            work/ui-studio/*.png
+            work/ui-studio/server-failure.log
+          if-no-files-found: ignore
+  windows-preview:
+    needs: [unit, browser]
+    runs-on: windows-2022
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          architecture: x64
+      - run: python -m pip install -r requirements-build.txt
+      - run: python -m PyInstaller --clean --noconfirm FORGE.spec
+      - name: Test windowed EXE on loopback without printers
+        shell: pwsh
+        env:
+          FORGE_NO_DIALOG: '1'
+          FORGE_DTF_RASTER_SMOKE: '1'
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $env:FORGE_DATA_DIR = Join-Path $env:RUNNER_TEMP 'studio-dtf-exe-test'
+          New-Item -ItemType Directory -Path $env:FORGE_DATA_DIR -Force | Out-Null
+          $executable = (Resolve-Path '.\dist\FluxoRIP.exe').Path
+          $process = Start-Process -FilePath $executable -ArgumentList '--autoteste' -PassThru
+          if (-not $process.WaitForExit(120000)) {
+            Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue
+            throw 'EXE smoke test timed out'
+          }
+          $process.Refresh()
+          if ($process.ExitCode -ne 0) {
+            $log = Join-Path $env:FORGE_DATA_DIR 'forge.log'
+            if (Test-Path $log) { Get-Content $log -Tail 100 }
+            throw "EXE smoke test failed: $($process.ExitCode)"
+          }
+          $sha = (Get-FileHash -Algorithm SHA256 $executable).Hash.ToLowerInvariant()
+          "$sha  FluxoRIP.exe" | Out-File -Encoding ascii .\dist\FluxoRIP.exe.sha256.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: FluxoRIP-Studio-DTF-Windows-x64-preview
+          path: |
+            dist/FluxoRIP.exe
+            dist/FluxoRIP.exe.sha256.txt
+          if-no-files-found: error
+          retention-days: 14

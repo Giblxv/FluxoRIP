@@ -38,7 +38,7 @@ def main():
                     raise RuntimeError(proc.stderr.read().decode(errors='replace'))
                 time.sleep(.1)
             else:raise RuntimeError('Servidor não iniciou.')
-            assert response['version']=='1.5.0',response
+            assert response['version']=='2.0.0',response
             for id,ip in [('dtf-a','192.168.127.10'),('dtf-b','192.168.127.10')]:
                 st,_=send(base,'/api/printers',{'id':id,'name':id,'technology':'DTF','ip':ip,'controller':'Hoson'},'POST')
                 assert st==201,st

@@ -63,8 +63,17 @@ def verify_agent(token, config):
 
 
 async def auth_middleware(request: Request, call_next):
+    # Local browser writes also need origin protection (e.g. hot-folder settings).
+    if request.method not in ('GET', 'HEAD', 'OPTIONS'):
+        origin = request.headers.get('origin')
+        expected = f'{request.url.scheme}://{request.headers.get("host", "")}'
+        if origin and origin.rstrip('/') != expected.rstrip('/'):
+            return JSONResponse({'detail':'Origem nao autorizada'}, status_code=403)
     if os.environ.get('FORGE_CENTRAL_MODE') != '1':
-        return await call_next(request)
+        response = await call_next(request)
+        response.headers['X-Frame-Options'] = 'DENY'
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        return response
     try:
         config = get_credentials()
     except Exception:

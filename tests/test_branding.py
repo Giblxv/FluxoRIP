@@ -5,7 +5,7 @@ ROOT=Path(__file__).resolve().parents[1]
 
 class BrandingTests(unittest.TestCase):
     def test_brand_assets_and_names(self):
-        html=(ROOT/'web/index.html').read_text(encoding='utf-8')
+        html=(ROOT/'web/management.html').read_text(encoding='utf-8')
         spec=(ROOT/'FORGE.spec').read_text(encoding='utf-8')
         self.assertIn('Fluxo RIP | Central de Produção',html)
         self.assertIn('brand-fluxorip.css',html)

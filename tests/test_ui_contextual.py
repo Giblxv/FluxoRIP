@@ -16,7 +16,7 @@ class ContextToolbarTests(unittest.TestCase):
         self.assertIn('data-pc-action="${id}"', js)
 
     def test_version_and_styles(self):
-        html = (WEB / "index.html").read_text(encoding="utf-8")
+        html = (WEB / "management.html").read_text(encoding="utf-8")
         css = (WEB / "styles.css").read_text(encoding="utf-8")
         self.assertIn("FLUXO RIP v1.5", html)
         self.assertIn('prints.js?v=10', html)

@@ -1,0 +1,5 @@
+-r requirements.txt
+# TestClient varia conforme a versão instalada do Starlette.
+httpx>=0.27,<1
+httpx2>=2.13,<3
+playwright>=1.48,<2

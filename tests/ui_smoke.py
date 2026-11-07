@@ -38,7 +38,7 @@ with tempfile.TemporaryDirectory(prefix='fluxorip-ui-') as t:
             page=browser.new_page(viewport={'width':1536,'height':960},device_scale_factor=1)
             errors=[]
             page.on('pageerror',lambda exc:errors.append(str(exc)))
-            page.goto(base+'/#stations',wait_until='domcontentloaded')
+            page.goto(base+'/gestao#stations',wait_until='domcontentloaded')
             page.wait_for_timeout(3000)
             assert page.locator('text=MAPA IMPRESSORAS').count() > 0
             assert page.locator('text=DTF Funsun 60cm').count()>0

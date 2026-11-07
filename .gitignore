@@ -16,3 +16,10 @@ forge.log
 
 CONTEXTO_CHATGPT_PRIVADO.md
 CHAT_COMPLETO_PRIVADO.md
+
+# Studio DTF runtime artifacts (never commit customer art or output ICCs).
+dtf_exports/
+dtf_profiles/
+work/
+FluxoRIP-Diagnostico-*/
+FluxoRIP-Preparacao-*/

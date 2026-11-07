@@ -1,10 +1,22 @@
-from pathlib import Path
-from app.paths import DATA_ROOT
-from sqlalchemy import create_engine, inspect
+import unicodedata
+
+from sqlalchemy import create_engine, event, inspect
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
+
+from app.paths import DATA_ROOT
 
 DB_PATH = DATA_ROOT / 'production.db'
 engine = create_engine(f'sqlite:///{DB_PATH.as_posix()}', connect_args={'check_same_thread': False})
+def normalize_search(value):
+    text = unicodedata.normalize('NFKD', str(value or '')).casefold()
+    return ''.join(char for char in text if not unicodedata.combining(char))
+
+
+@event.listens_for(engine, 'connect')
+def configure_sqlite(connection, _):
+    connection.create_function('fluxo_search', 1, normalize_search, deterministic=True)
+
+
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 
 
@@ -13,7 +25,16 @@ class Base(DeclarativeBase):
 
 
 def init_db():
-    from app import models, art_editor, print_console, stations, printer_links  # noqa: F401
+    from app import (  # noqa: F401
+        art_editor,
+        dtf_hotfolder,
+        dtf_studio,
+        models,
+        print_console,
+        printer_links,
+        printexp,
+        stations,
+    )
     Base.metadata.create_all(bind=engine)
     # Upgrade compatível com a estrutura 0.1 se houver um DB existente.
     additions = {

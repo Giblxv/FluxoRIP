@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 const read = path => readFileSync(new URL(path, import.meta.url), "utf8");
-const html = read("./index.html");
+const html = read("./management.html");
 const app = read("./app.js");
 const pages = ["projects", "art", "prints", "queue", "history",
                "printers", "stations", "scanner", "files"];

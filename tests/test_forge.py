@@ -32,7 +32,7 @@ class ForgeIntegrationTests(unittest.TestCase):
         self.assertEqual(self.client.get('/api/system').json()['data_dir'], str(DATA_ROOT))
         page = self.client.get('/')
         self.assertEqual(page.status_code, 200)
-        self.assertIn('Editor de Arte', page.text)
+        self.assertIn('Studio DTF', page.text)
         self.assertEqual(self.client.get('/static/app.js').status_code, 200)
 
     def test_02_queues_and_order(self):
@@ -70,12 +70,18 @@ class ForgeIntegrationTests(unittest.TestCase):
             (source / 'production.db').write_bytes(b'database-example')
             (source / 'art_storage' / 'test').mkdir(parents=True)
             (source / 'art_storage' / 'test' / 'print.png').write_bytes(b'image-example')
+            for folder in ('dtf_profiles', 'dtf_exports'):
+                (source / folder).mkdir()
+                (source / folder / 'exemplo').write_bytes(b'dtf-fixture')
             with patch('forge_launcher.DATA_ROOT', target):
                 self.assertTrue(migrate_if_needed(source))
                 self.assertFalse(migrate_if_needed(source))
             self.assertEqual((target / 'production.db').read_bytes(), b'database-example')
             self.assertEqual((target / 'art_storage/test/print.png').read_bytes(), b'image-example')
             self.assertTrue((source / 'production.db').exists())
+            for folder in ('dtf_profiles', 'dtf_exports'):
+                self.assertEqual((target / folder / 'exemplo').read_bytes(), b'dtf-fixture')
+                self.assertEqual((source / folder / 'exemplo').read_bytes(), b'dtf-fixture')
 
 
     def test_05_print_console_profiles(self):
@@ -133,11 +139,11 @@ class ForgeIntegrationTests(unittest.TestCase):
         self.assertIn('forgeMotionOnRender', js.text)
 
     def test_07_console_assets_and_compatibility(self):
-        page = self.client.get('/').text
+        page = self.client.get('/gestao').text
         self.assertIn('data-page="prints"', page)
         self.assertIn('prints.js', page)
         self.assertEqual(self.client.get('/static/prints.js').status_code, 200)
-        self.assertEqual(self.client.get('/api/health').json()['version'], '1.5.0')
+        self.assertEqual(self.client.get('/api/health').json()['version'], '2.0.0')
         self.assertEqual(self.client.get('/api/printers/DTF-01/integration').json()['mode'], 'observe_only')
 
 

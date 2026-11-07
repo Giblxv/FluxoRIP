@@ -56,10 +56,11 @@ def migrate_if_needed(candidate: Path) -> bool:
     target = DATA_ROOT / 'production.db'
     if not db.is_file() or target.exists():
         return False
-    art = source / 'art_storage'
     try:
-        if art.is_dir():
-            shutil.copytree(art, DATA_ROOT / 'art_storage', dirs_exist_ok=True)
+        for folder_name in ('art_storage', 'dtf_profiles', 'dtf_exports'):
+            folder = source / folder_name
+            if folder.is_dir():
+                shutil.copytree(folder, DATA_ROOT / folder_name, dirs_exist_ok=True)
         temp = DATA_ROOT / 'production.db.migrando'
         shutil.copy2(db, temp)
         temp.replace(target)
@@ -277,6 +278,9 @@ def main():
                     assert 'Fluxo RIP' in reply.read(20000).decode('utf-8')
                 with urllib.request.urlopen(f'http://127.0.0.1:{port}/api/art/capabilities', timeout=10) as reply:
                     assert json.loads(reply.read())['basic'] is True
+                if os.environ.get('FORGE_DTF_RASTER_SMOKE') == '1':
+                    from app.dtf_selftest import run_smoke
+                    run_smoke(f'http://127.0.0.1:{port}')
                 logging.info('Autoteste concluido: API, editor e interface OK')
                 return
             display_host = args.host if args.central else '127.0.0.1'

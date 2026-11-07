@@ -25,6 +25,7 @@ class FolderMonitor:
         self.last_errors = {}
 
     def start(self):
+        self.stop_event.clear()
         self.thread = Thread(target=self._loop, name='folder-monitor', daemon=True)
         self.thread.start()
 

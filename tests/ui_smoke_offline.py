@@ -3,7 +3,7 @@ import json,re,base64
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 ROOT=Path(__file__).resolve().parents[1]/'web'
-html=(ROOT/'index.html').read_text(encoding='utf-8')
+html=(ROOT/'management.html').read_text(encoding='utf-8')
 logo=base64.b64encode((ROOT/'assets/fluxo-rip-mark.svg').read_bytes()).decode('ascii')
 html=html.replace('/static/assets/fluxo-rip-mark.svg',f'data:image/svg+xml;base64,{logo}')
 css='\n'.join((ROOT/x).read_text(encoding='utf-8') for x in ['styles.css','motion.css','network_scanner.css','brand-fluxorip.css'])
