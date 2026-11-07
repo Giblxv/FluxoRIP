@@ -6,23 +6,11 @@ A aba **PrintExp** permite vincular uma instalação local ou uma cópia para an
 
 O caminho deve apontar para a raiz que contém `Project.ini` e `Data`, no computador que executa a API do Fluxo RIP. Não é um caminho do navegador remoto. A leitura é feita ao abrir a aba, vincular ou clicar em **Atualizar leitura**, sem varredura automática de discos. O vínculo é salvo em uma tabela adicional no banco do Fluxo; desvincular remove o caminho dessa configuração. Nenhuma tabela existente é alterada.
 
-## Evidências analisadas em 7 de novembro de 2026
+## Escopo da análise
 
-O operador disponibilizou uma cópia do PrintExp em uma pasta RIP no Drive. A análise foi estática; nenhum executável ou DLL desse pacote foi iniciado. Arquivos proprietários, parâmetros de máquina, dados de clientes e credenciais não fazem parte do repositório.
+O operador disponibilizou uma cópia para análise estática; nenhum executável ou DLL desse pacote foi iniciado. Os testes de compatibilidade verificaram os arquivos de tarefas sem modificá-los. Detalhes de versão, inventário, contagens operacionais, parâmetros e arquivos fornecidos ficam fora desta documentação pública. Os testes reproduzíveis do repositório usam somente dados sintéticos.
 
-- `PrintExp_X64.exe`: PE32+ x64, data de compilação registrada em 10/01/2023. SHA-256 `4f8c874ee48edafaed444c20c7690333710ccd0a41d2959000a22406794dd0df`.
-- Os recursos textuais do executável incluem `FileVersion 1.0.0.1` e `ProductVersion 5.7.0.35`. O primeiro item das notas de atualização refere-se ao pacote `PrintExp_X64_V5.7.6.5.122.BS_20230110.zip`. São referências diferentes; não se assume que uma delas representa firmware ou versão verificada na estação em funcionamento.
-- O filtro de abertura de arquivos do executável referencia `.prn` e `.prt`. Isso não comprova suporte direto aos PNG/TIFF de pré-impressão gerados pelo Studio.
-- `Project.ini` contém seleção de comunicação entre softwares e uma seção de plataforma ERP. Na cópia analisada, o módulo escolhido é RIIN e a plataforma ERP está desabilitada. Encontrar opções ou portas no arquivo não estabelece o protocolo, contrato de mensagens, autenticação ou procedimento seguro de envio. Nenhuma dessas opções é alterada.
-
-| Arquivo analisado | Versão TSKF | Registros declarados e percorridos |
-| --- | --- | --- |
-| `fileTask.tf` | 24 | 35 |
-| `printTask.tf` | 24 | 2 |
-| `HistoryTask.tf` | 24 | 2.078 |
-| `recordTask.tf` | 24 | 1.202 |
-
-Os quatro arquivos chegaram exatamente ao fim após percorrer os registros; os hashes foram preservados após a leitura. Todos os caminhos de trabalhos encontrados nessa cópia referenciavam `.prt`. Esses números descrevem somente a cópia analisada; não confirmam uma fila ativa nem impressões concluídas.
+Ler uma cópia não confirma a versão em execução, a configuração atual da estação, uma fila ativa ou impressões concluídas. A existência de opções de comunicação também não estabelece o contrato de mensagens ou um procedimento seguro de envio.
 
 ## Contrato implementado
 
