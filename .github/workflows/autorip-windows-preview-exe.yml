@@ -1,0 +1,70 @@
+name: FluxoRIP preview Windows x64 (experimental, no printer)
+
+on:
+  push:
+    branches:
+      - research/autorizado-autorip-studio
+    paths:
+      - '.github/workflows/autorip-windows-preview-exe.yml'
+      - 'web/**'
+      - 'app/**'
+      - 'forge_launcher.py'
+      - 'FORGE.spec'
+      - 'requirements*.txt'
+      - 'tests/**'
+      - 'setup/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-preview:
+    name: Windows x64 preview build and loopback smoke
+    runs-on: windows-2022
+    timeout-minutes: 45
+    steps:
+      - name: Checkout selected research branch
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Guard research branch only
+        shell: pwsh
+        run: |
+          if ("${{ github.ref }}" -ne "refs/heads/research/autorizado-autorip-studio") {
+            throw "Ref not permitted for experimental build"
+          }
+      - name: Set up Python 3.12 x64
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          architecture: x64
+      - name: Install build dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-build.txt
+      - name: Run existing synthetic unit tests
+        run: python -m unittest discover -s tests -v
+      - name: Build experimental executable
+        run: python -m PyInstaller --clean --noconfirm FORGE.spec
+      - name: Loopback-only smoke test (no printer actions)
+        shell: pwsh
+        env:
+          FORGE_NO_DIALOG: '1'
+        run: |
+          & .\dist\FluxoRIP.exe --autoteste
+          if ($LASTEXITCODE -ne 0) { throw "Loopback-only EXE smoke test failed" }
+      - name: Write SHA-256 checksum
+        shell: pwsh
+        run: |
+          $sha = (Get-FileHash -Algorithm SHA256 .\dist\FluxoRIP.exe).Hash.ToLowerInvariant()
+          "$sha  FluxoRIP.exe" | Out-File -Encoding ascii .\dist\FluxoRIP.exe.sha256.txt
+      - name: Upload test EXE after successful checks
+        uses: actions/upload-artifact@v4
+        with:
+          name: FluxoRIP-experimental-win-x64
+          path: |
+            dist/FluxoRIP.exe
+            dist/FluxoRIP.exe.sha256.txt
+          if-no-files-found: error
+          retention-days: 14
