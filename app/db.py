@@ -32,6 +32,7 @@ def init_db():
         models,
         print_console,
         printer_links,
+        printexp,
         stations,
     )
     Base.metadata.create_all(bind=engine)

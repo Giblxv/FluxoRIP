@@ -20,6 +20,7 @@ from app.printer_links import router as printer_links_router
 from app.central_auth import auth_middleware
 from app.dtf_studio import router as studio_router, worker as raster_worker
 from app.dtf_hotfolder import router as hotfolder_router
+from app.printexp import router as printexp_router
 
 from app.paths import BUNDLE_ROOT, DATA_ROOT
 from app.windows_compat import windows_details, webview2_runtime
@@ -75,6 +76,7 @@ async def validation_error(request, exc):
 app.middleware('http')(auth_middleware)
 app.include_router(studio_router)
 app.include_router(hotfolder_router)
+app.include_router(printexp_router)
 app.include_router(station_router)
 app.include_router(printer_links_router)
 app.include_router(art_router)

@@ -60,6 +60,9 @@
     errors: [],
     preview: "color",
     hotfolder: null,
+    printexp: null,
+    printexpError: "",
+    printexpBusy: false,
     automationLoadError: "",
     automationDirty: false,
     search: "",
@@ -206,6 +209,11 @@
       "A cor certa começa<br>com o perfil certo<span>.</span>",
       "Adicione o ICC de saída da sua combinação de impressora, tinta e filme.",
     ],
+    printexp: [
+      "INTEGRAÇÃO PRINTEXP",
+      "Seu PrintExp,<br>mais perto do fluxo<span>.</span>",
+      "Consulte os arquivos de tarefas da instalação escolhida neste computador.",
+    ],
   };
   function navigate(page, recordHistory = true) {
     if (!(page in titles)) return;
@@ -216,6 +224,7 @@
     state.automationDirty = false;
     render();
     if (page === "automation") loadAutomation().catch((e) => toast(e.message));
+    if (page === "printexp") loadPrintExp();
     if (page === "library") loadLibrary(state.libraryOffset);
     if (page === "runs") poll();
     window.forgeMotionOnRender?.(page);
@@ -238,7 +247,7 @@
         ? "<span>＋</span> Importar ICC"
         : "<span>＋</span> Importar artes";
     $("#page-content").innerHTML =
-      `${state.importing ? '<div class="upload-progress" role="status" id="upload-progress">Importando artes…</div>' : ""}${state.errors.length ? `<div class="import-errors" role="alert">${state.errors.map(esc).join("<br>")}<br><button class="button small subtle" data-action="dismiss-errors">Fechar avisos</button></div>` : ""}${state.page === "studio" ? studioMarkup() : state.page === "library" ? libraryMarkup() : state.page === "runs" ? '<div class="search-toolbar"><input type="search" id="run-search" placeholder="Buscar por nome ou ID do trabalho…" aria-label="Buscar rasterizações" /><span id="runs-total"></span></div><div id="runs-list"></div><div id="runs-pagination"></div>' : state.page === "automation" ? automationMarkup() : profilesMarkup()}`;
+      `${state.importing ? '<div class="upload-progress" role="status" id="upload-progress">Importando artes…</div>' : ""}${state.errors.length ? `<div class="import-errors" role="alert">${state.errors.map(esc).join("<br>")}<br><button class="button small subtle" data-action="dismiss-errors">Fechar avisos</button></div>` : ""}${state.page === "studio" ? studioMarkup() : state.page === "library" ? libraryMarkup() : state.page === "runs" ? '<div class="search-toolbar"><input type="search" id="run-search" placeholder="Buscar por nome ou ID do trabalho…" aria-label="Buscar rasterizações" /><span id="runs-total"></span></div><div id="runs-list"></div><div id="runs-pagination"></div>' : state.page === "automation" ? automationMarkup() : state.page === "printexp" ? printexpMarkup() : profilesMarkup()}`;
     if (state.page === "studio") {
       paintLayout();
       updateGenerate();
@@ -392,6 +401,64 @@ ${field("max_page_length_mm", "Comprimento máximo por página", "mm", 'min="50"
         }
       }
       throw error;
+    }
+  }
+  function printexpMarkup() {
+    if (!state.printexp)
+      return `<div id="printexp-results" aria-live="polite">${state.printexpError ? `<div class="layout-error" role="alert">${esc(state.printexpError)} <button class="button" data-action="refresh-printexp">Tentar novamente</button></div>` : '<div class="initial-loading" role="status">Carregando integração PrintExp…</div>'}</div>`;
+    const config = state.printexp?.settings || {};
+    return `<div class="guide-panel"><strong>Uma janela para os arquivos do PrintExp.</strong><br>Escolha a pasta que contém Project.ini e Data. A leitura funciona com a instalação local ou uma cópia para análise. Os registros podem estar desatualizados; a situação física da impressora permanece não verificada. Esta integração lê arquivos e não envia trabalhos para impressão.</div><section class="panel printexp-panel"><div class="panel-top"><h2><span class="step-number">⇄</span> PrintExp em leitura</h2><span class="status-tag">${config.enabled ? "PASTA VINCULADA" : "DESATIVADO"}</span></div><form id="printexp-form" class="settings-body"><label class="field"><span>Pasta do PrintExp neste computador servidor</span><input id="printexp-path" value="${esc(config.folder || "")}" placeholder="C:&#92;PrintExp" required autocomplete="off" /><small>Selecione a raiz da instalação, acima da subpasta Data.</small></label><div class="automation-actions"><button class="button cyan" type="submit">Vincular para leitura</button><button class="button" type="button" data-action="refresh-printexp">Atualizar leitura</button><button class="button" type="button" data-action="disable-printexp" ${!config.enabled ? "disabled" : ""}>Desvincular</button></div></form></section><div id="printexp-results" aria-live="polite">${printexpResults()}</div>`;
+  }
+  function printexpResults() {
+    if (state.printexpError)
+      return `<div class="layout-error" role="alert">${esc(state.printexpError)}${!state.printexp ? ' <button class="button" data-action="refresh-printexp">Tentar novamente</button>' : ""}</div>`;
+    if (state.printexpBusy)
+      return '<div class="initial-loading" role="status">Lendo arquivos do PrintExp…</div>';
+    const data = state.printexp;
+    if (!data?.settings.enabled)
+      return '<p class="setting-note">Vincule uma pasta para consultar as listas de tarefas. Nenhuma instalação é procurada automaticamente.</p>';
+    const names = {
+      "fileTask.tf": "Lista de arquivos",
+      "printTask.tf": "Lista de tarefas de impressão",
+      "HistoryTask.tf": "Arquivo de histórico",
+      "recordTask.tf": "Arquivo de registros",
+    };
+    const module =
+      { 0: "PrintExp ↔ PrintExp", 1: "RIIN", 2: "ERP", 3: "Maintop RIP" }[
+        data.configuration.comm_module
+      ] || "Não identificado";
+    const platform = data.configuration.platform_enabled;
+    return `<div class="guide-panel"><strong>Última leitura: ${esc(new Date(data.read_at).toLocaleString("pt-BR"))}</strong><br>Comunicação configurada: ${esc(module)} · Plataforma ERP: ${platform === true ? "habilitada no arquivo" : platform === false ? "desabilitada no arquivo" : "não identificada"}. Estas opções não confirmam uma conexão ativa.<br>Mostramos até 30 nomes por arquivo. O total conta registros, incluindo possíveis repetições; não confirma trabalhos concluídos.</div>${data.issues.map((i) => `<div class="layout-error" role="alert">${esc(i)}</div>`).join("")}<div class="printexp-grid">${data.sources.map((s) => `<section class="panel"><div class="panel-top"><h2>${esc(names[s.file] || s.file)}</h2><span class="status-tag ${s.state === "LIDO" ? "CONCLUIDO" : "ERRO"}">${s.state === "LIDO" ? `${s.count} REGISTROS` : "INDISPONÍVEL"}</span></div><div class="settings-body"><small class="setting-note">${esc(s.file)}${s.modified_at ? ` · Alterado em ${esc(new Date(s.modified_at).toLocaleString("pt-BR"))}` : ""}</small>${s.error ? `<p role="alert">${esc(s.error)}</p>` : s.items.length ? `<ul class="printexp-tasks">${s.items.map((i) => `<li>${esc(i.filename)}</li>`).join("")}</ul><small class="setting-note">${s.shown} de ${s.count} registros · TSKF ${s.format_version}</small>` : '<p class="setting-note">Nenhum registro neste arquivo.</p>'}</div></section>`).join("")}</div>`;
+  }
+  async function loadPrintExp(options) {
+    if (state.printexpBusy) return;
+    const initial = !state.printexp;
+    state.printexpBusy = true;
+    state.printexpError = "";
+    const paint = () => {
+      if (state.page === "printexp" && $("#printexp-results"))
+        $("#printexp-results").innerHTML = printexpResults();
+      if (state.page === "printexp")
+        document.querySelectorAll("#printexp-form button").forEach((button) => {
+          button.disabled =
+            state.printexpBusy ||
+            (button.dataset.action === "disable-printexp" &&
+              !state.printexp?.settings.enabled);
+        });
+    };
+    paint();
+    try {
+      state.printexp = await api("/api/studio/printexp", options);
+      if (state.page === "printexp") {
+        // A simple refresh preserves unsaved path edits and keyboard focus.
+        if (options || initial) render();
+      }
+    } catch (error) {
+      state.printexpError = error.message;
+    } finally {
+      state.printexpBusy = false;
+      if (initial && state.page === "printexp") render();
+      paint();
     }
   }
   function profilesMarkup() {
@@ -794,6 +861,13 @@ ${field("max_page_length_mm", "Comprimento máximo por página", "mm", 'min="50"
         changeRunPage(0);
       }
       if (action === "retry-automation") await loadAutomation(true);
+      if (action === "refresh-printexp") await loadPrintExp();
+      if (action === "disable-printexp")
+        await loadPrintExp({
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ enabled: false }),
+        });
       if (action === "retry-library") loadLibrary(state.libraryOffset);
       if (action === "import") $("#file-input").click();
       if (action === "import-icc") $("#icc-input").click();
@@ -828,6 +902,18 @@ ${field("max_page_length_mm", "Comprimento máximo por página", "mm", 'min="50"
     }
   });
   document.addEventListener("submit", async (event) => {
+    if (event.target.id === "printexp-form") {
+      event.preventDefault();
+      await loadPrintExp({
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          enabled: true,
+          folder: $("#printexp-path").value,
+        }),
+      });
+      return;
+    }
     if (event.target.id !== "hotfolder-form") return;
     event.preventDefault();
     const button = event.target.querySelector('[type="submit"]');
@@ -1051,6 +1137,7 @@ ${field("max_page_length_mm", "Comprimento máximo por página", "mm", 'min="50"
       if (state.page === "library" && state.search) loadLibrary(0);
       if (state.page === "automation")
         loadAutomation().catch((e) => toast(e.message));
+      if (state.page === "printexp") loadPrintExp();
     } catch (error) {
       setOnline(false);
     } finally {

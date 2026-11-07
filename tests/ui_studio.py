@@ -10,6 +10,7 @@ import json
 import os
 import re
 import socket
+import struct
 import subprocess
 import sys
 import tempfile
@@ -304,6 +305,75 @@ def main():
                     expect(page.locator(".automation-panel .status-tag")).to_have_text(
                         "DESATIVADA"
                     )
+                    # Actual file-based PrintExp adapter, synthetic opaque records.
+                    printexp = data / "PrintExp-synthetic"
+                    (printexp / "Data").mkdir(parents=True)
+                    (printexp / "Project.ini").write_text(
+                        "[COMM_CONFIG]\nCOMM_MODULE=1\n[PLATFORM_CONFIG]\nENABLE=0\n",
+                        encoding="utf-8",
+                    )
+                    filename = "Arte <script>.PRT"
+                    fields = [
+                        filename,
+                        "(null)",
+                        "C:\\private\\" + filename,
+                        filename + ".bmp",
+                    ]
+                    record = struct.pack("<I", 1)
+                    for field in fields:
+                        raw = field.encode() + b"\0"
+                        record += struct.pack("<I", len(raw)) + raw
+                    task_bytes = (
+                        b"TSKF" + struct.pack("<III", 24, 1, len(record)) + record
+                    )
+                    for task_name in (
+                        "fileTask.tf",
+                        "printTask.tf",
+                        "HistoryTask.tf",
+                        "recordTask.tf",
+                    ):
+                        (printexp / "Data" / task_name).write_bytes(task_bytes)
+                    page.locator("[data-page=printexp]").click()
+                    page.locator("#printexp-path").fill(str(printexp))
+                    page.get_by_role("button", name="Vincular para leitura").click()
+                    expect(page.locator(".printexp-grid .panel")).to_have_count(4)
+                    expect(page.locator(".printexp-tasks li").first).to_have_text(
+                        filename
+                    )
+                    expect(page.locator(".printexp-grid script")).to_have_count(0)
+                    expect(page.locator(".printexp-panel .status-tag")).to_have_text(
+                        "PASTA VINCULADA"
+                    )
+                    page.screenshot(
+                        path=str(shots / "printexp-reading.png"), full_page=True
+                    )
+                    page.reload()
+                    expect(page.locator("#printexp-path")).to_have_value(str(printexp))
+                    expect(page.locator(".printexp-tasks li")).to_have_count(4)
+                    page.locator("#printexp-path").fill("caminho ainda não salvo")
+                    (printexp / "Data/printTask.tf").write_bytes(b"partial-update")
+                    page.get_by_role("button", name="Atualizar leitura").click()
+                    expect(
+                        page.locator(".printexp-grid .status-tag.ERRO")
+                    ).to_have_count(1)
+                    expect(page.locator("#printexp-path")).to_have_value(
+                        "caminho ainda não salvo"
+                    )
+                    page.get_by_role("button", name="Desvincular", exact=True).click()
+                    expect(page.locator(".printexp-panel .status-tag")).to_have_text(
+                        "DESATIVADO"
+                    )
+                    expect(page.locator("#printexp-path")).to_have_value("")
+                    page.route("**/api/studio/printexp", lambda route: route.abort())
+                    page.reload()
+                    expect(
+                        page.get_by_role("button", name="Tentar novamente", exact=True)
+                    ).to_be_visible()
+                    page.unroute("**/api/studio/printexp")
+                    page.get_by_role(
+                        "button", name="Tentar novamente", exact=True
+                    ).click()
+                    expect(page.locator("#printexp-form")).to_be_visible()
                     page.locator("[data-page=runs]").click()
                     page.locator("#run-search").fill("Auto")
                     expect(page.locator(".job-card")).to_have_count(1)
@@ -411,6 +481,7 @@ def main():
                         "runs",
                         "profiles",
                         "automation",
+                        "printexp",
                     ):
                         page.set_viewport_size({"width": 390, "height": 844})
                         page.locator(f"[data-page={page_id}]").click()
@@ -433,7 +504,7 @@ def main():
                     context.close()
                     browser.close()
                 print(
-                    "PASS: importação, composição, exportação multipágina, rotação, provas finais, rascunho, busca paginada, reconexão, pasta automática, 5 telas mobile, movimento reduzido; sem erros JS."
+                    "PASS: importação, composição, exportação multipágina, rotação, provas finais, rascunho, busca paginada, reconexão, pasta automática, PrintExp em leitura, 6 telas mobile, movimento reduzido; sem erros JS."
                 )
                 print("Screenshots:", shots)
             except Exception:

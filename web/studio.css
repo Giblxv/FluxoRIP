@@ -2001,6 +2001,29 @@ input[type="range"] {
 .pagination-note {
   margin: 0 0 15px;
 }
+.printexp-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr));
+  gap: 20px;
+}
+.printexp-panel {
+  margin-bottom: 20px;
+}
+.printexp-grid .panel-top {
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.printexp-grid .panel-top h2 {
+  font-size: 13px;
+}
+.printexp-tasks {
+  padding-left: 18px;
+  max-height: 300px;
+  overflow: auto;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+  line-height: 1.8;
+}
 .selection-hint {
   font-size: 9px;
   color: #85949d;

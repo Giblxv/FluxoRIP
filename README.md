@@ -18,6 +18,7 @@ Preparação automática de imagens para DTF, com interface em português, compo
 - Histórico de rasterizações com busca por nome/ID e paginação em todo o acervo, mantendo o contador global de trabalhos ativos.
 - Fila persistente, processamento sequencial fora da requisição HTTP, progresso por etapas reais, cancelamento, histórico e reutilização da composição.
 - Pasta automática opcional: aguarda estabilidade por pelo menos seis segundos, importa uma vez cada versão do arquivo e gera um pacote por imagem.
+- Aba PrintExp: vínculo opcional à pasta local, leitura das listas TSKF 24, contagem de registros e consulta das opções de comunicação, preservando os arquivos da instalação.
 - Fontes Archivo/Public Sans incluídas com licença OFL, sem carregamento externo no Studio.
 - Interface responsiva, rascunho local, reconexão automática, navegação voltar/avançar do navegador e atalhos de importação (`Ctrl+O`), animações com controle e respeito ao movimento reduzido do sistema.
 
@@ -75,6 +76,14 @@ Em **Pasta automática**, informe uma pasta existente no computador servidor, a 
 Arquivos já presentes também entram no fluxo. Não há recursão nem leitura de links simbólicos. O monitor verifica tamanho/data em duas observações separadas por seis segundos; um produtor que pause a escrita por mais tempo pode parecer estável. Para cópias demoradas, grave com extensão temporária e renomeie só ao concluir. Cada versão é identificada por caminho, tamanho e data; alterar o arquivo permite nova importação. Erros de imagem são registrados uma vez por versão. Desativar a pasta impede novas entradas; trabalhos já enfileirados continuam na fila.
 
 Os pacotes ficam em `dtf_exports` dentro da pasta de dados. A automação não altera a entrada nem copia arquivos para a pasta do PrintExp.
+
+## PrintExp em leitura
+
+Abra **PrintExp**, informe a pasta absoluta da instalação no computador que executa o Fluxo RIP (contendo `Project.ini` e `Data`) e clique em **Vincular para leitura**. Também é possível selecionar uma cópia da instalação para análise. **Atualizar leitura** consulta novamente os arquivos; **Desvincular** apaga o vínculo salvo no Fluxo.
+
+São lidos `fileTask.tf`, `printTask.tf`, `HistoryTask.tf` e `recordTask.tf`, com até 30 nomes por arquivo e a contagem total de registros. Esses registros podem estar antigos ou repetidos. Não são telemetria física e não alteram o histórico de rasterizações do Studio. A integração não inicia executáveis, carrega DLLs, abre conexões com a placa ou escreve na instalação do PrintExp.
+
+O suporte foi verificado com arquivos TSKF versão 24 fornecidos pelo operador. Formatos diferentes ou incompletos ficam indisponíveis, com erro específico por arquivo. O envio automático de PRT/PRN depende de uma interface documentada e de validação em Windows com a estação real. Veja [a análise e os limites da integração](docs/INTEGRACAO_PRINTEXP.md).
 
 ## Dados e compatibilidade
 
