@@ -50,7 +50,7 @@
     }
   });
   document.addEventListener('pointerdown',event=>{
-    if(!animationsAvailable() || !event.isPrimary || event.button!==0)return;
+    if(!animationsAvailable() || document.hidden || !event.isPrimary || event.button!==0)return;
     const target=targetForEffect(event.target);
     if(!target || target.matches('.task-card') || target.classList.contains('dragging'))return;
     const rect=target.getBoundingClientRect();
@@ -80,7 +80,7 @@
   },{passive:true});
   // A second keypress must not let the first timeout cancel newer feedback.
   document.addEventListener('keydown',event=>{
-    if(!animationsAvailable() || event.repeat || !['Enter',' '].includes(event.key))return;
+    if(!animationsAvailable() || document.hidden || event.repeat || !['Enter',' '].includes(event.key))return;
     const target=targetForEffect(event.target);
     if(!target || target.matches('.task-card') && event.key===' ')return;
     const previousTimer=keypressTimers.get(target);
