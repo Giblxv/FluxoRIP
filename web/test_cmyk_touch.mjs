@@ -14,4 +14,10 @@ assert.match(css, /:focus-visible\s*\{\s*outline:\s*3px solid var\(--cartoon-y\)
 assert.match(css, /@media\s*\(prefers-reduced-motion:\s*reduce\)/);
 assert.match(css, /html\.motion-off/);
 assert.match(css, /\.task-card\.dragging\s*\{[^}]*animation:\s*none\s*!important/s);
+const touchStart = css.indexOf("@media (pointer: coarse)");
+const touchEnd = css.indexOf("/* Focus must remain visible", touchStart);
+const touchRules = css.slice(touchStart, touchEnd);
+assert.match(touchRules,
+  /\.top-tab:active:not\(:disabled\)[^{}]*\.action\.primary:active:not\(:disabled\),\s*#primary-btn:active:not\(:disabled\)\s*\{\s*transform:\s*none;/s,
+  "touch press states must not move or shrink controls");
 console.log("PASS: CMYK touch targets, keyboard focus, reduced motion, drag stability");
