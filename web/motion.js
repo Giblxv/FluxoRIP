@@ -114,7 +114,12 @@
   // Background tabs should not retain a half-finished entrance effect.
   // The next explicit navigation can animate normally after returning.
   document.addEventListener('visibilitychange',()=>{
-    if(document.hidden)clearPageMotion();
+    if(document.hidden){
+      clearPageMotion();
+      // Hidden windows must not retain pressed/ripple/keyboard feedback.
+      // The next visible interaction starts with a clean visual state.
+      clearTransientEffects();
+    }
   });
   window.forgeMotionOnRender=onRender;
   // Respeita alterações feitas nas preferências do Windows enquanto o app está aberto.
