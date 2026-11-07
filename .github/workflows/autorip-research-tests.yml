@@ -42,6 +42,8 @@ jobs:
         run: node web/test_motion_preference.mjs
       - name: Validate CMYK page motion lifecycle (synthetic DOM)
         run: node web/test_motion_page.mjs
+      - name: Validate bounded concurrent CMYK ripples (synthetic DOM)
+        run: node web/test_motion_ripple_limit.mjs
       - name: Validate CMYK touch and accessibility contracts
         run: node web/test_cmyk_touch.mjs
       - name: Validate tabpanel semantics (static accessibility smoke)
