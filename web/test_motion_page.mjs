@@ -99,4 +99,17 @@ function harness(){
   app.render("queue");
   assert.equal(app.timers.size,1,"explicit next navigation still animates");
 }
+{
+  const app=harness();
+  app.visibility(true);
+  app.render("projects");
+  assert.equal(app.timers.size,0,"hidden initial render must not schedule entrance");
+  assert.equal(app.view.classList.contains("motion-page-enter"),false);
+  app.render("queue");
+  assert.equal(app.timers.size,0,"hidden navigation must not animate");
+  app.visibility(false);
+  assert.equal(app.timers.size,0,"returning must not replay stale hidden navigation");
+  app.render("history");
+  assert.equal(app.timers.size,1,"new visible navigation should animate");
+}
 console.log("PASS: page entrance lifecycle, hidden-tab cleanup, refresh stability and reduced-motion cancellation");
