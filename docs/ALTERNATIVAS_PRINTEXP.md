@@ -8,7 +8,7 @@ Para uma operação que salva PRT/PRN no RIP e abre esse arquivo manualmente no 
 | --- | --- | --- |
 | Entrada no Production Manager por hot folder | Fila e preset escolhidos pelo operador | Automatiza entrada no RIP; não comprova importação no PrintExp |
 | Abertura por associação PRT/PRN do Windows | Registro da associação e teste com a versão instalada | Uma associação existente pode usar outro programa; não é autorização para executá-la |
-| Automação da interface do PrintExp | Controles acessíveis, comportamento de importar e política de início da fila | Depende da versão, foco e estado da janela; não implementada nesta investigação |
+| Preparação assistida da interface do PrintExp | Janela padrão reconhecida, campo vazio e confirmação local do operador | Protótipo separado preenche somente o caminho; abertura e impressão continuam manuais |
 | Receptor de rede do PrintExp | Processo e socket observados, contrato do transporte e testes controlados | Um socket escutando não define o protocolo nem confirma que é seguro enviar dados |
 | API/SDK do fornecedor | Contrato compatível com software, placa e firmware | Continua sendo uma possibilidade, sem ser o único caminho de investigação |
 
@@ -32,6 +32,16 @@ A ferramenta inclui metadados Win32 para janelas que não expõem padrões de a�
 A versão 3 corrige a prioridade de descoberta: uma sequência de janelas auxiliares ocultas não pode consumir o limite de raízes antes de um diálogo visível. Descendentes ocultos são omitidos, com contadores explícitos. `visible_capture_complete` informa se a leitura dos elementos visíveis ficou completa dentro dos limites. IDs repetidos em painéis diferentes não identificam uma ação sem a hierarquia e a validação da janela correspondente. A regressão é testada com dados sintéticos que colocam um diálogo visível depois de dezenas de janelas auxiliares e ocultas.
 
 Testes automatizados usam processos e conexões sintéticos, mais uma coleta de leitura no Windows Server sem PrintExp ou impressora. A ferramenta não confirma compatibilidade com a máquina real. A leitura de acessibilidade pode não estar disponível em janelas personalizadas; existe a opção `-SkipAccessibility`.
+
+## Ensaio de preparação de caminho
+
+O pacote [`tools/printexp_prepare`](../tools/printexp_prepare/LEIAME.md) implementa um ensaio manual separado do coletor e do Studio. Por padrão, inspeciona a janela. No modo de preparação, o operador seleciona um PRT/PRN local e confirma o preenchimento do campo de arquivo de uma janela que já abriu manualmente no PrintExp.
+
+A identificação exige uma única instância do processo, um único diálogo padrão, vínculo com uma janela do mesmo processo desabilitada pelo modal, hierarquia do campo, controles visíveis/habilitados e rótulos Open/Abrir e Cancel/Cancelar. A janela é revalidada depois da interação com o operador. Campos já preenchidos, diálogos Salvar, estruturas diferentes, caminhos de rede e arquivos não regulares são recusados.
+
+Uma confirmação local permite no máximo uma tentativa de alteração do texto, por meio de [WM_SETTEXT](https://learn.microsoft.com/en-us/windows/win32/winmsg/wm-settext), com limite de espera e leitura de volta. O ensaio termina com a janela aberta; o operador confere o campo e cancela manualmente. O protótipo não confirma a abertura nem pede impressão. Testes usam uma aplicação sintética própria com diálogos reais do Windows e verificam que o evento de confirmação não ocorre.
+
+Essa etapa não comprova o comportamento do PrintExp depois de abrir um trabalho, nem sua política de impressão ou compatibilidade de PRT. Não está incorporada como uma ação automática de produção no Studio.
 
 ## O que esta investigação não habilita
 
