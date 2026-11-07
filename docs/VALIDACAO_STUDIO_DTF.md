@@ -25,6 +25,8 @@ A fila registra progresso em etapas realmente concluídas. O cancelamento usa at
 | Dez scripts `web/test_*.mjs` | Aprovados; navegação, foco, movimento reduzido, contraste e ciclo de vida dos efeitos |
 | `python tests/ui_studio.py` com Chromium instalado | Fluxo real aprovado, sem mocks de API e sem erros JS |
 | Sintaxe Python e JavaScript; `git diff --check` | Aprovadas |
+| CI em Ubuntu e Windows Server 2022 | Testes Python, smoke HTTP e dez regressões JS aprovados |
+| Prévia EXE Windows x64 | Compilada por PyInstaller no GitHub Actions, com autoteste HTTP local aprovado e SHA-256 no artefato |
 
 O teste de navegador importa duas artes, ajusta larguras e cópias, verifica a prévia, restaura o rascunho após recarregar, exporta e abre o ZIP, confere transparência, trata geometria inválida, processa uma imagem em pasta automática e comprova que a entrada permanece intacta. Também abre as cinco telas em 390 px de largura sem transbordamento horizontal e verifica movimento reduzido/contraste forçado. As capturas usam artes sintéticas.
 
@@ -38,7 +40,7 @@ Dois testes antigos de motion tinham simulações de DOM desatualizadas: faltava
 
 ## Pendências e limites
 
-- Não houve compilação de `FluxoRIP.exe`, execução nativa em Windows 10/11 ou teste físico de impressão. Os workflows de build/teste continuam disponíveis para essa validação.
+- A compilação EXE e o autoteste foram feitos em Windows Server 2022 no GitHub Actions. Execução em Windows 10/11, janela WebView2 e teste físico de impressão continuam pendentes.
 - Não há PRT homologado, retícula de dispositivo, canal spot W integrado, protocolo Hoson ou envio à máquina.
 - Composição por prateleiras, sem rotação e sem garantia de solução ótima; limite de 40 MP e 30.000 px por lado na saída. Sem tiles/paginação automática do rolo.
 - Um único worker/processo de servidor; não iniciar múltiplos Uvicorn workers.
@@ -48,4 +50,4 @@ Dois testes antigos de motion tinham simulações de DOM desatualizadas: faltava
 
 ## Reproduzir
 
-Consulte os comandos em `README.md`, `requirements-test.txt` e `.github/workflows/dtf-studio-checks.yml`. O workflow novo valida backend em Linux/Windows e o fluxo de navegador em Linux. Um workflow configurado não equivale a uma execução de CI já concluída.
+Consulte os comandos em `README.md`, `requirements-test.txt` e `.github/workflows/dtf-studio-checks.yml`. O workflow novo valida backend em Linux/Windows e o fluxo de navegador em Linux. A primeira execução de CI também revelou uma resposta atrasada que recriava o formulário da pasta automática durante o preenchimento. O Studio agora aguarda a configuração inicial e preserva campos editados; o teste de navegador inclui uma leitura atrasada para prevenir essa regressão.

@@ -48,7 +48,7 @@ python -m uvicorn app.main:app --host 127.0.0.1 --port 8765
 
 Abra `http://127.0.0.1:8765`. Também é possível usar o launcher e o instalador existentes. Para compilar no Windows 10/11 x64, execute `GERAR_EXECUTAVEL.bat`; o código continua usando `FORGE.spec` para gerar `dist/FluxoRIP.exe`.
 
-**Não há EXE compilado nesta entrega.** A compilação Windows e os testes em Windows 10/11 e impressora física permanecem necessários.
+**Há uma prévia EXE compilada pelo GitHub Actions em Windows Server 2022**, com autoteste HTTP local. Baixe o artefato `FluxoRIP-Studio-DTF-Windows-x64-preview` no workflow **Studio DTF checks** do PR. Isso não comprova execução em Windows 10/11 ou impressão física; esses testes continuam pendentes.
 
 ## Fluxo de uso
 

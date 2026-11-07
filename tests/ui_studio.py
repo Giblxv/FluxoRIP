@@ -172,7 +172,23 @@ def main():
                     page.locator("#width-0").fill("140")
                     expect(page.locator("#generate-button")).to_be_enabled()
                     # Real hot-folder ingestion, untouched source, no fake API responses.
+                    held_requests = []
+
+                    def hold_settings(route):
+                        if route.request.method == "GET":
+                            held_requests.append(route)
+                        else:
+                            route.continue_()
+
+                    page.route("**/api/studio/hotfolder", hold_settings)
                     page.locator("[data-page=automation]").click()
+                    # A delayed initial read cannot replace fields during typing.
+                    expect(page.locator("#hotfolder-form")).to_have_count(0)
+                    page.wait_for_timeout(100)
+                    assert held_requests, "Config request was not intercepted"
+                    for route in held_requests:
+                        route.continue_()
+                    page.unroute("**/api/studio/hotfolder", hold_settings)
                     page.locator("#hotfolder-path").fill(str(incoming))
                     page.locator("#hotfolder-width").fill("60")
                     page.get_by_role(

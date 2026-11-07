@@ -41,12 +41,14 @@
     errors: [],
     preview: "color",
     hotfolder: null,
+    automationDirty: false,
     search: "",
     online: false,
     generating: false,
     layoutBusy: false,
   };
   const draftKey = "fluxorip.studio.draft.v2";
+  let automationSequence = 0;
   let layoutSequence = 0,
     layoutTimer,
     toastTimer,
@@ -165,6 +167,7 @@
   function navigate(page) {
     if (!(page in titles)) return;
     state.page = page;
+    state.automationDirty = false;
     render();
     if (page === "automation") loadAutomation().catch((e) => toast(e.message));
     window.forgeMotionOnRender?.(page);
@@ -240,6 +243,8 @@
     return `<div class="library-grid">${filtered.map((a) => `<article class="library-card"><button class="library-preview checker" data-inspect="${esc(a.id)}" aria-label="Conferir ${esc(a.original_name)}"><img src="${thumb(a.id)}" alt="${esc(a.original_name)}" loading="lazy" /></button><div class="library-details"><strong title="${esc(a.original_name)}">${esc(a.original_name)}</strong><small>${a.width} × ${a.height} px · ${a.dpi_x} DPI</small><small>${a.operation === "importada" ? "Original importado" : "Revisão · " + esc(a.operation)}</small><div class="library-actions"><button class="button small" data-add="${esc(a.id)}">＋ Compor</button><button class="button small subtle" data-inspect="${esc(a.id)}">Conferir →</button></div></div></article>`).join("")}</div>`;
   }
   function automationMarkup() {
+    if (!state.hotfolder)
+      return '<div class="initial-loading" role="status">Carregando configuração da pasta automática…</div>';
     const config = state.hotfolder?.settings || {};
     const receipts = state.hotfolder?.receipts || [];
     return `<div class="guide-panel"><strong>Uma imagem nova. Um pacote DTF.</strong><br>O Fluxo observa apenas a pasta escolhida neste computador servidor, espera o arquivo estabilizar e gera uma composição por imagem. Os originais permanecem na pasta de entrada. Use os parâmetros atuais da tela Preparar filme para configurar a automação.</div><section class="panel automation-panel"><div class="panel-top"><h2><span class="step-number">AUTO</span> Entrada de imagens</h2><span class="status-tag ${config.enabled ? "CONCLUIDO" : ""}">${config.enabled ? "ATIVADA" : "DESATIVADA"}</span></div><form id="hotfolder-form" class="settings-body"><label class="field"><span>Caminho completo da pasta de entrada</span><input id="hotfolder-path" value="${esc(config.folder || "")}" placeholder="C:&#92;Artes&#92;Entrada DTF" required autocomplete="off" /><small>A pasta precisa existir no computador que executa o Fluxo RIP. Sem subpastas.</small></label><label class="field"><span>Largura de cada arte no filme · mm</span><input id="hotfolder-width" type="number" value="${esc(config.art_width_mm || 100)}" min="1" max="2000" step="0.1" required /></label><div class="setting-note">Ao ativar, também serão processadas imagens já presentes nesta pasta. Um arquivo estável é importado uma vez; alterações de tamanho ou data criam uma nova entrada. Cada imagem gera um pacote separado, sem envio à impressora.</div><div class="automation-actions"><button class="button cyan" type="submit" ${!state.online ? "disabled" : ""}>Usar parâmetros atuais e ativar</button><button class="button" type="button" data-action="disable-hotfolder" ${!config.enabled ? "disabled" : ""}>Desativar</button></div>${config.enabled ? `<div class="setting-note">Configuração salva: filme ${number(config.film_width_mm / 10)} cm · ${config.dpi} DPI · ${config.mirror ? "espelhado" : "normal"} · branco ${config.white_percent}% · recuo ${number(config.choke_mm, 2)} mm. Novas alterações no Studio só afetam esta pasta depois de ativar novamente.</div>` : ""}</form></section>${state.hotfolder?.last_error ? `<div class="layout-error" role="alert">${esc(state.hotfolder.last_error)}</div>` : ""}<div class="automation-receipts">${
@@ -255,9 +260,15 @@
         : ""
     }</div>`;
   }
-  async function loadAutomation() {
-    state.hotfolder = await api("/api/studio/hotfolder");
-    if (state.page === "automation") render();
+  async function loadAutomation(force = false) {
+    const sequence = ++automationSequence;
+    const latest = await api("/api/studio/hotfolder");
+    if (sequence !== automationSequence) return;
+    state.hotfolder = latest;
+    if (state.page === "automation" && (force || !state.automationDirty)) {
+      state.automationDirty = false;
+      render();
+    }
   }
   function profilesMarkup() {
     return `<div class="guide-panel"><strong>Perfis ligados à sua produção.</strong><br>Um ICC CMYK descreve a resposta de cor da combinação de impressora, tinta, filme e processo. Use o perfil fornecido ou medido para sua operação. Sem ICC CMYK, o Fluxo exporta a cor em sRGB com transparência e a máscara branca independente.</div><div class="profile-grid"><article class="profile-card"><div class="profile-icon">◉</div><h3>sRGB + branco</h3><p>Saída padrão, com transparência. A conversão final de cor fica a cargo do RIP de impressão.</p><span class="status-tag CONCLUIDO">DISPONÍVEL</span></article>${state.profiles.map((p) => `<article class="profile-card"><div class="profile-icon">◉</div><h3>${esc(p.name)}</h3><p>ICC de saída CMYK · validado pelo LittleCMS.<br>O perfil não substitui a calibração física.</p><code>SHA-256<br>${esc(p.sha256)}</code></article>`).join("")}<article class="profile-card"><div class="profile-icon" style="color:var(--cyan)">＋</div><h3>Seu perfil CMYK</h3><p>Importe um arquivo .icc ou .icm de até 4 MB.</p><button class="button small" data-action="import-icc">Importar perfil ICC</button></article></div>`;
@@ -561,7 +572,7 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ ...state.hotfolder.settings, enabled: false }),
         });
-        await loadAutomation();
+        await loadAutomation(true);
         toast(
           "Pasta automática desativada. Os trabalhos já enfileirados continuam disponíveis.",
         );
@@ -595,7 +606,7 @@
           art_width_mm: Number($("#hotfolder-width").value),
         }),
       });
-      await loadAutomation();
+      await loadAutomation(true);
       toast("Pasta automática ativada. Aguardando arquivos estáveis.");
     } catch (e) {
       toast(e.message);
@@ -604,6 +615,7 @@
   });
   function updateInput(event) {
     const target = event.target;
+    if (target.closest("#hotfolder-form")) state.automationDirty = true;
     if (target.id === "library-search") {
       state.search = target.value;
       $("#library-results").innerHTML = libraryCards();
