@@ -4,11 +4,13 @@
 param(
     [string]$OutputDirectory,
     [switch]$SkipAccessibility,
+    [switch]$SkipNativeWindows,
     [switch]$NonInteractive
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'Read-Win32Controls.ps1')
 
 function Get-EndpointKind {
     param([string]$Address)
@@ -105,7 +107,7 @@ function Get-AccessibilityEvidence {
 }
 
 function Get-StationEvidence {
-    param([switch]$SkipAccessibility)
+    param([switch]$SkipAccessibility, [switch]$SkipNativeWindows)
     $issues = New-Object 'System.Collections.Generic.List[string]'
     $targets = New-Object 'System.Collections.Generic.List[object]'
     foreach ($process in @(Get-Process)) {
@@ -121,9 +123,14 @@ function Get-StationEvidence {
         if (-not $SkipAccessibility) {
             try { $accessibility = Get-AccessibilityEvidence -WindowHandle $process.MainWindowHandle } catch { }
         }
+        $native = [pscustomobject]@{ state = 'skipped'; nodes = @(); truncated = $false }
+        if (-not $SkipNativeWindows) {
+            $native = Get-Win32WindowEvidence -TargetProcessId $process.Id
+        }
         $targets.Add([pscustomobject]@{
             process_name = $name; process_id = $process.Id; file_version = $version
             accessibility = $accessibility
+            native_windows = $native
         })
     }
     $connections = New-Object 'System.Collections.Generic.List[object]'
@@ -148,7 +155,7 @@ function Get-StationEvidence {
         } catch { $tcpState = 'unavailable'; $issues.Add('tcp_inventory_unavailable') }
     }
     return [pscustomobject][ordered]@{
-        schema_version = 1; mode = 'observe_only'; machine_status = 'NAO_VERIFICADO'
+        schema_version = 2; mode = 'observe_only'; machine_status = 'NAO_VERIFICADO'
         collected_at = [DateTime]::UtcNow.ToString('o')
         powershell_version = $PSVersionTable.PSVersion.ToString()
         processes = @($targets.ToArray()); tcp_state = $tcpState
@@ -182,7 +189,7 @@ if ($MyInvocation.InvocationName -ne '.') {
             $OutputDirectory = $dialog.SelectedPath
         }
         Write-Host 'Coletando informacoes de leitura. Mantenha PrintExp e Production Manager abertos.'
-        $evidence = Get-StationEvidence -SkipAccessibility:$SkipAccessibility
+        $evidence = Get-StationEvidence -SkipAccessibility:$SkipAccessibility -SkipNativeWindows:$SkipNativeWindows
         $report = Save-StationEvidence -Evidence $evidence -ParentDirectory $OutputDirectory
         Write-Host ('Relatorio criado: ' + $report)
         Write-Host ('Processos encontrados: ' + @($evidence.processes).Count)

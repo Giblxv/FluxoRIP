@@ -27,6 +27,8 @@ O pacote em [`tools/printexp_diagnostic`](../tools/printexp_diagnostic/LEIAME.md
 
 O JSON omite IPs, caminhos, usuários, nomes de trabalhos e textos da interface. Os resultados pertencem à estação e não devem ser incluídos no Git. Processos genéricos como `App.exe` só são considerados quando o caminho identifica a instalação SAi/Flexi; acesso negado pode produzir um relatório parcial.
 
+A versão 2 inclui metadados Win32 para janelas que não expõem padrões de ação UI Automation. Enumera janelas do processo selecionado, classes, IDs de controles, hierarquia, estilos e estados de visibilidade/habilitação; não lê títulos ou conteúdos. Janelas de nível superior e controles visíveis são priorizados antes dos ocultos, com limites de enumeração. Não há `SendMessage`, `PostMessage`, acionamento de padrões ou cliques. Esses identificadores ajudam a investigar seletores e não provam que uma ação de importação é compatível.
+
 Testes automatizados usam processos e conexões sintéticos, mais uma coleta de leitura no Windows Server sem PrintExp ou impressora. A ferramenta não confirma compatibilidade com a máquina real. A leitura de acessibilidade pode não estar disponível em janelas personalizadas; existe a opção `-SkipAccessibility`.
 
 ## O que esta investigação não habilita

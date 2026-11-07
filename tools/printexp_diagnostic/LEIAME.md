@@ -1,16 +1,16 @@
-# Diagnóstico local do PrintExp e FlexiPRINT
+# Diagnóstico local do PrintExp e FlexiPRINT · versão 2
 
 Esta ferramenta consulta informações do Windows para investigar uma integração com a instalação em execução. Não precisa do IP da impressora nem de Python.
 
 1. Extraia todos os arquivos do ZIP para uma pasta no computador usado na impressão.
-2. Deixe PrintExp e FlexiPRINT / Production Manager abertos normalmente.
+2. Deixe PrintExp e FlexiPRINT / Production Manager abertos normalmente. Para investigar a importação, abra manualmente a janela **OpenFiles / Abrir arquivo** do PrintExp e mantenha-a aberta, sem selecionar ou confirmar nenhum arquivo.
 3. Abra `EXECUTAR_DIAGNOSTICO.cmd`.
 4. Escolha uma pasta para salvar o resultado. Será criada uma subpasta nova `FluxoRIP-Diagnostico-...` com `diagnostico.json`.
 5. Revise o JSON e coloque essa subpasta na pasta **RIP** do seu Drive. Informe no chat quando estiver disponível.
 
-O diagnóstico lê versões dos processos correspondentes, tipos de controles de acessibilidade, associações de abertura de PRT/PRN e conexões TCP que esses processos já possuem. Não abre conexões, transmite comandos, inicia o PrintExp, clica em controles, abre trabalhos, altera o registro ou lê artes e parâmetros de máquina.
+O diagnóstico lê versões dos processos correspondentes, tipos de controles de acessibilidade, identificadores e estilos de controles Win32, associações de abertura de PRT/PRN e conexões TCP que esses processos já possuem. Não abre conexões, transmite comandos, inicia o PrintExp, clica em controles, abre trabalhos, altera o registro ou lê artes e parâmetros de máquina.
 
-O relatório omite endereços IP, nome do computador, usuário, caminhos de instalação, argumentos de processos, títulos de janelas, textos dos controles e nomes de trabalhos. Endereços são classificados como `loopback`, `any` ou `non_loopback`; portas existentes e IDs temporários de processos permanecem no JSON para correlação. Não é captura de pacotes.
+O relatório omite endereços IP, nome do computador, usuário, caminhos de instalação, argumentos de processos, títulos de janelas, textos dos controles e nomes de trabalhos. Endereços são classificados como `loopback`, `any` ou `non_loopback`; portas existentes e IDs temporários de processos permanecem no JSON para correlação. Na leitura Win32, handles de janela são substituídos por números locais do relatório; aparecem classe, ID de controle, hierarquia, estilo, visibilidade e habilitação. Não é captura de pacotes.
 
 O arquivo `.cmd` permite a execução deste script somente no processo PowerShell iniciado; não altera a política permanente do Windows. Não solicita elevação de administrador. Se alguma informação não puder ser lida, o relatório registra a ausência; não tente liberar portas ou mudar configurações de rede.
 
@@ -29,3 +29,5 @@ O resultado verifica quais caminhos podem ser investigados. Uma associação de 
 ```
 
 Compatibilidade alvo: Windows 10 22H2 / Windows 11, Windows PowerShell 5.1. Os testes automatizados usam Windows Server 2022; isso não substitui a validação na estação do operador.
+
+O formato do JSON é `schema_version=2`. Caso a enumeração nativa esteja indisponível, a seção `native_windows` registra essa condição. Para omiti-la explicitamente, utilize `-SkipNativeWindows`.

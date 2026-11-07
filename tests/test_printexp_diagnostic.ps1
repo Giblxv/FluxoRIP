@@ -46,7 +46,7 @@ function Get-OpenAssociation {
     param([string]$Extension)
     [pscustomobject]@{ extension=$Extension; state='unavailable'; handler=$null; has_file_placeholder=$false }
 }
-$result = Get-StationEvidence -SkipAccessibility
+$result = Get-StationEvidence -SkipAccessibility -SkipNativeWindows
 Assert-Equal $result.processes.Count 1 'Only target processes'
 Assert-Equal $result.connections.Count 2 'Only sockets of selected processes'
 Assert-Equal $result.tcp_state 'observed' 'TCP collection state'
@@ -58,13 +58,13 @@ foreach ($private in @('192.0.2.1','192.0.2.88','198.51.100','C:\Private','Unrel
 }
 
 function Get-NetTCPConnection { throw 'Access unavailable' }
-$result = Get-StationEvidence -SkipAccessibility
+$result = Get-StationEvidence -SkipAccessibility -SkipNativeWindows
 Assert-Equal $result.tcp_state 'unavailable' 'Permission failure remains partial'
 Assert-Equal $result.issues[0] 'tcp_inventory_unavailable' 'Fixed error without system details'
 
 function Get-Process { @() }
 function Get-NetTCPConnection { throw 'Must not read table without targets' }
-$empty = Get-StationEvidence -SkipAccessibility
+$empty = Get-StationEvidence -SkipAccessibility -SkipNativeWindows
 Assert-Equal $empty.processes.Count 0 'No target process'
 Assert-Equal $empty.tcp_state 'not_requested_no_target' 'No unnecessary TCP inventory'
 
@@ -84,7 +84,37 @@ try {
 } finally { Remove-Item -LiteralPath $temp -Recurse -Force }
 
 # Fail if future code introduces active network/UI actions into the collector.
-$source = Get-Content -LiteralPath (Join-Path $PSScriptRoot '..\tools\printexp_diagnostic\Diagnosticar-PrintExp.ps1') -Raw
-$forbidden = '(?i)Test-NetConnection|Invoke-WebRequest|Invoke-RestMethod|Start-Process|SendKeys|\.Invoke\(|\.SetValue\(|New-Object\s+(?:System\.)?Net\.Sockets|Set-ItemProperty|New-NetFirewallRule'
+$source = (Get-ChildItem (Join-Path $PSScriptRoot '..\tools\printexp_diagnostic\*.ps1') | ForEach-Object { Get-Content -LiteralPath $_.FullName -Raw }) -join "`n"
+$forbidden = '(?i)Test-NetConnection|Invoke-WebRequest|Invoke-RestMethod|Start-Process|SendKeys|\.Invoke\(|\.SetValue\(|New-Object\s+(?:System\.)?Net\.Sockets|Set-ItemProperty|New-NetFirewallRule|SendMessage|PostMessage|SetWindowLong|GetWindowText|WM_GETTEXT'
 if ($source -match $forbidden) { throw 'Unexpected active operation in diagnostic script' }
+if ([Environment]::OSVersion.Platform -eq 'Win32NT') {
+    $native = Get-Win32WindowEvidence -TargetProcessId $PID
+    Assert-Equal $native.state 'observed' 'Actual Win32 metadata enumeration'
+    foreach ($node in $native.nodes) {
+        foreach ($key in @('node_id','parent_node_id','control_id','class_name','top_level','visible','enabled','style')) {
+            if ($key -notin @($node.PSObject.Properties.Name)) { throw 'Missing native metadata field' }
+        }
+        if ($node.PSObject.Properties.Name -match '^(handle|title|text|value|name)$') { throw 'Window contents or handles leaked' }
+    }
+    if ($PSVersionTable.PSEdition -eq 'Desktop') {
+        Add-Type -AssemblyName System.Windows.Forms
+        $form = New-Object System.Windows.Forms.Form
+        try {
+            $form.Text = 'PRIVATE_ARTWORK_TITLE'
+            $button = New-Object System.Windows.Forms.Button
+            $button.Text = 'PRIVATE_JOB_BUTTON'
+            $button.Name = 'PRIVATE_JOB_AUTOMATION_ID'
+            $form.Controls.Add($button)
+            $form.Show()
+            [System.Windows.Forms.Application]::DoEvents()
+            $fixture = Get-Win32WindowEvidence -TargetProcessId $PID
+            Assert-Equal $fixture.state 'observed' 'Win32 fixture collection'
+            if (@($fixture.nodes | Where-Object { $_.top_level }).Count -lt 1) { throw 'Fixture root missing' }
+            if (@($fixture.nodes | Where-Object { $_.class_name -match 'BUTTON' -and $null -ne $_.parent_node_id }).Count -lt 1) { throw 'Fixture button metadata missing' }
+            if (($fixture | ConvertTo-Json -Depth 6).Contains('PRIVATE_')) { throw 'Fixture title, label or automation name leaked' }
+        } finally { $form.Dispose() }
+    }
+} else {
+    Assert-Equal (Get-Win32WindowEvidence -TargetProcessId 1).state 'unavailable' 'Non-Windows fallback'
+}
 Write-Host 'PASS: endpoint redaction, target filtering, partial errors, no-target path, report preservation, JSON and read-only contract.'
