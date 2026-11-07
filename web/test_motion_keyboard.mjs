@@ -15,8 +15,11 @@ const target={
 const toggle={setAttribute(){},querySelector(){return {textContent:''};}};
 const query={matches:false,addEventListener(_,fn){listeners.media=fn;}};
 const document={
+  hidden:false,
   documentElement:{classList:{toggle(){}}},
-  querySelectorAll(){return [];},
+  querySelectorAll(selector){
+    return selector==='.fx-keypress' && classes.has('fx-keypress') ? [target] : [];
+  },
   getElementById(id){return id==='motion-toggle'?toggle:null;},
   addEventListener(name,fn){listeners[name]=fn;}
 };
@@ -44,4 +47,16 @@ const active=[...timers.values()][0];
 active();
 assert.equal(classes.has('fx-keypress'),false);
 assert.equal(timers.size,1,'fake clock retains callback until flushed');
-console.log('PASS: rapid keypress timeout replacement and reduced-motion cancellation');
+// A window hidden mid-keypress must clear both the timer and visual class.
+press();
+assert.equal(classes.has('fx-keypress'),true);
+assert.equal(timers.size,2,'earlier synthetic callback was not flushed');
+document.hidden=true;
+listeners.visibilitychange();
+assert.equal(classes.has('fx-keypress'),false,'hidden window clears keypress state');
+assert.equal(timers.size,1,'hidden window cancels pending active timer');
+document.hidden=false;
+listeners.visibilitychange();
+press();
+assert.equal(classes.has('fx-keypress'),true,'visible interaction works again');
+console.log('PASS: rapid keyboard feedback, reduced-motion and hidden-window cleanup');
