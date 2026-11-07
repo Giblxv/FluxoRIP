@@ -64,15 +64,24 @@
     // Fallback for interrupted animations or background tab throttling.
     setTimeout(finish,600);
   },{passive:true});
+  // A second keypress must not let the first timeout cancel newer feedback.
+  const keypressTimers=new WeakMap();
   document.addEventListener('keydown',event=>{
     if(!animationsAvailable() || event.repeat || !['Enter',' '].includes(event.key))return;
     const target=targetForEffect(event.target);
     if(!target || target.matches('.task-card') && event.key===' ')return;
+    const previousTimer=keypressTimers.get(target);
+    if(previousTimer!==undefined)clearTimeout(previousTimer);
     target.classList.remove('fx-keypress');
     // Reinicia a animação da tecla sem alterar a função do botão.
     void target.offsetWidth;
     target.classList.add('fx-keypress');
-    setTimeout(()=>target.classList.remove('fx-keypress'),280);
+    const timer=setTimeout(()=>{
+      if(keypressTimers.get(target)!==timer)return;
+      keypressTimers.delete(target);
+      target.classList.remove('fx-keypress');
+    },280);
+    keypressTimers.set(target,timer);
   });
   let previousPage=null;
   let pageMotionTimer=null;
