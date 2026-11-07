@@ -1,4 +1,4 @@
-# Diagnóstico local do PrintExp e FlexiPRINT · versão 2
+# Diagnóstico local do PrintExp e FlexiPRINT · versão 3
 
 Esta ferramenta consulta informações do Windows para investigar uma integração com a instalação em execução. Não precisa do IP da impressora nem de Python.
 
@@ -30,4 +30,6 @@ O resultado verifica quais caminhos podem ser investigados. Uma associação de 
 
 Compatibilidade alvo: Windows 10 22H2 / Windows 11, Windows PowerShell 5.1. Os testes automatizados usam Windows Server 2022; isso não substitui a validação na estação do operador.
 
-O formato do JSON é `schema_version=2`. Caso a enumeração nativa esteja indisponível, a seção `native_windows` registra essa condição. Para omiti-la explicitamente, utilize `-SkipNativeWindows`.
+O formato do JSON é `schema_version=3`. Caso a enumeração nativa esteja indisponível, a seção `native_windows` registra essa condição. Para omiti-la explicitamente, utilize `-SkipNativeWindows`.
+
+Esta versão prioriza todas as janelas visíveis encontradas antes de aplicar o limite de saída. Ignora janelas auxiliares de dicas/IME e omite descendentes ocultos. Isso evita perder um diálogo visível por excesso de controles ocultos. O relatório registra `helper_windows_omitted`, `hidden_nodes_omitted` e `visible_capture_complete`. Um valor `false` nesse último campo impede concluir que uma janela ou controle esteja ausente.

@@ -87,6 +87,27 @@ try {
 $source = (Get-ChildItem (Join-Path $PSScriptRoot '..\tools\printexp_diagnostic\*.ps1') | ForEach-Object { Get-Content -LiteralPath $_.FullName -Raw }) -join "`n"
 $forbidden = '(?i)Test-NetConnection|Invoke-WebRequest|Invoke-RestMethod|Start-Process|SendKeys|\.Invoke\(|\.SetValue\(|New-Object\s+(?:System\.)?Net\.Sockets|Set-ItemProperty|New-NetFirewallRule|SendMessage|PostMessage|SetWindowLong|GetWindowText|WM_GETTEXT'
 if ($source -match $forbidden) { throw 'Unexpected active operation in diagnostic script' }
+Initialize-Win32WindowReader
+$candidates = New-Object 'System.Collections.Generic.List[FluxoRIP.ReadOnlyWindowsV3.RootCandidate]'
+for ($index = 0; $index -lt 80; $index++) {
+    $candidate = New-Object FluxoRIP.ReadOnlyWindowsV3.RootCandidate
+    $candidate.ClassName = 'tooltips_class32'
+    $candidate.Handle = [IntPtr]($index + 1)
+    $candidates.Add($candidate)
+}
+for ($index = 0; $index -lt 40; $index++) {
+    $candidate = New-Object FluxoRIP.ReadOnlyWindowsV3.RootCandidate
+    $candidate.ClassName = 'HiddenAuxiliary'
+    $candidate.Handle = [IntPtr]($index + 81)
+    $candidates.Add($candidate)
+}
+$dialog = New-Object FluxoRIP.ReadOnlyWindowsV3.RootCandidate
+$dialog.ClassName = '#32770'; $dialog.Visible = $true; $dialog.Handle = [IntPtr]500
+$candidates.Add($dialog)
+$selection = [FluxoRIP.ReadOnlyWindowsV3.Snapshot]::PrioritizeRoots($candidates.ToArray())
+Assert-Equal $selection[0].Handle ([IntPtr]500) 'Visible dialog must survive helper/hidden window flood'
+Assert-Equal $selection.Count 17 'Visible root plus bounded hidden roots'
+if (@($selection | Where-Object { $_.ClassName -eq 'tooltips_class32' }).Count -gt 0) { throw 'Tooltip consumes root budget' }
 if ([Environment]::OSVersion.Platform -eq 'Win32NT') {
     $native = Get-Win32WindowEvidence -TargetProcessId $PID
     Assert-Equal $native.state 'observed' 'Actual Win32 metadata enumeration'

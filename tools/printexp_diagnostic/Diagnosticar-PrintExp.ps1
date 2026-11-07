@@ -155,7 +155,7 @@ function Get-StationEvidence {
         } catch { $tcpState = 'unavailable'; $issues.Add('tcp_inventory_unavailable') }
     }
     return [pscustomobject][ordered]@{
-        schema_version = 2; mode = 'observe_only'; machine_status = 'NAO_VERIFICADO'
+        schema_version = 3; mode = 'observe_only'; machine_status = 'NAO_VERIFICADO'
         collected_at = [DateTime]::UtcNow.ToString('o')
         powershell_version = $PSVersionTable.PSVersion.ToString()
         processes = @($targets.ToArray()); tcp_state = $tcpState

@@ -1,6 +1,6 @@
 @echo off
 setlocal
-title Fluxo RIP - Diagnostico de leitura v2
+title Fluxo RIP - Diagnostico de leitura v3
 echo Abra o PrintExp e o Production Manager antes de continuar.
 echo Este diagnostico nao envia trabalhos nem comandos para a impressora.
 echo Para investigar importacao, deixe a janela OpenFiles do PrintExp aberta sem selecionar arquivo.
