@@ -8,7 +8,10 @@
   const motionQuery=window.matchMedia('(prefers-reduced-motion: reduce)');
   const respectsReducedMotion=()=>motionQuery.matches;
   const animationsAvailable=()=>enabled && !respectsReducedMotion();
+  const keypressTimers=new Map();
   function clearTransientEffects(){
+    for(const timer of keypressTimers.values())clearTimeout(timer);
+    keypressTimers.clear();
     document.querySelectorAll('.fx-ripple').forEach(node=>node.remove());
     document.querySelectorAll('.fx-keypress').forEach(node=>node.classList.remove('fx-keypress'));
     document.querySelectorAll('.fx-pressable').forEach(node=>node.classList.remove('fx-pressable'));
@@ -65,7 +68,6 @@
     setTimeout(finish,600);
   },{passive:true});
   // A second keypress must not let the first timeout cancel newer feedback.
-  const keypressTimers=new WeakMap();
   document.addEventListener('keydown',event=>{
     if(!animationsAvailable() || event.repeat || !['Enter',' '].includes(event.key))return;
     const target=targetForEffect(event.target);
