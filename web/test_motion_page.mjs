@@ -31,6 +31,7 @@ function harness(){
     contains(name){return rootClasses.has(name);}
   }};
   const document={
+    hidden:false,
     documentElement:root,
     getElementById(id){return {view,title,"motion-toggle":toggle}[id]||null;},
     addEventListener(name,cb){listeners[name]=cb;}
@@ -48,6 +49,7 @@ function harness(){
     render(page){context.window.forgeMotionOnRender(page);},
     flush(){const jobs=[...timers.values()];timers.clear();jobs.forEach(fn=>fn());},
     reduce(on){query.matches=on;listeners.media();},
+    visibility(hidden){document.hidden=hidden;listeners.visibilitychange();},
     toggle(){listeners.click({target:{closest(){return toggle;}}});}
   };
 }
@@ -84,4 +86,17 @@ function harness(){
   app.flush();
   assert.equal(app.view.classList.contains("motion-page-enter"),false);
 }
-console.log("PASS: page entrance lifecycle, refresh stability and reduced-motion cancellation");
+{
+  const app=harness();
+  app.render("projects");
+  assert.equal(app.timers.size,1);
+  app.visibility(true);
+  assert.equal(app.timers.size,0,"hidden tab cancels entrance timeout");
+  assert.equal(app.view.classList.contains("motion-page-enter"),false);
+  assert.equal(app.title.classList.contains("motion-page-title"),false);
+  app.visibility(false);
+  assert.equal(app.timers.size,0,"returning to tab must not restart animation");
+  app.render("queue");
+  assert.equal(app.timers.size,1,"explicit next navigation still animates");
+}
+console.log("PASS: page entrance lifecycle, hidden-tab cleanup, refresh stability and reduced-motion cancellation");
