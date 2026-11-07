@@ -93,6 +93,11 @@
     title?.classList.add('motion-page-title');
     pageMotionTimer=setTimeout(clearPageMotion,700);
   }
+  // Background tabs should not retain a half-finished entrance effect.
+  // The next explicit navigation can animate normally after returning.
+  document.addEventListener('visibilitychange',()=>{
+    if(document.hidden)clearPageMotion();
+  });
   window.forgeMotionOnRender=onRender;
   // Respeita alterações feitas nas preferências do Windows enquanto o app está aberto.
   if(typeof motionQuery.addEventListener==='function')motionQuery.addEventListener('change',apply);
