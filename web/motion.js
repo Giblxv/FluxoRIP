@@ -11,6 +11,7 @@
   function clearTransientEffects(){
     document.querySelectorAll('.fx-ripple').forEach(node=>node.remove());
     document.querySelectorAll('.fx-keypress').forEach(node=>node.classList.remove('fx-keypress'));
+    document.querySelectorAll('.fx-pressable').forEach(node=>node.classList.remove('fx-pressable'));
   }
   function apply(){
     const reduced=respectsReducedMotion();
@@ -54,9 +55,14 @@
     ripple.style.left=`${event.clientX-rect.left}px`;
     ripple.style.top=`${event.clientY-rect.top}px`;
     target.appendChild(ripple);
-    ripple.addEventListener('animationend',()=>ripple.remove(),{once:true});
-    // Fallback se a preferência de animação mudar durante o clique.
-    setTimeout(()=>ripple.remove(),600);
+    const finish=()=>{
+      ripple.remove();
+      // Do not leave the pressed marker on controls after feedback ends.
+      if(!target.querySelector('.fx-ripple'))target.classList.remove('fx-pressable');
+    };
+    ripple.addEventListener('animationend',finish,{once:true});
+    // Fallback for interrupted animations or background tab throttling.
+    setTimeout(finish,600);
   },{passive:true});
   document.addEventListener('keydown',event=>{
     if(!animationsAvailable() || event.repeat || !['Enter',' '].includes(event.key))return;
