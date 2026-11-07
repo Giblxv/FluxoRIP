@@ -46,6 +46,12 @@
     profiles: [],
     runs: [],
     runsEtag: null,
+    runSearch: "",
+    runsOffset: 0,
+    runsTotal: 0,
+    activeRuns: 0,
+    runsLoading: false,
+    runCache: new Map(),
     items: [],
     settings: { ...defaults },
     layout: null,
@@ -62,7 +68,8 @@
     layoutBusy: false,
   };
   const draftKey = "fluxorip.studio.draft.v2";
-  let inspectionSequence = 0;
+  let inspectionSequence = 0,
+    runSearchTimer;
   let automationSequence = 0,
     librarySequence = 0,
     libraryTimer;
@@ -105,7 +112,7 @@
     toastTimer = setTimeout(() => $("#toast").classList.remove("show"), 4500);
   }
   async function api(url, options = {}) {
-    const { conditional = false, ...fetchOptions } = options;
+    const { conditional = false, onResponse, ...fetchOptions } = options;
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 20000);
     try {
@@ -113,8 +120,8 @@
         ...fetchOptions,
         signal: fetchOptions.signal || controller.signal,
       });
+      if (response.ok || response.status === 304) onResponse?.(response);
       if (conditional && response.status === 304) return null;
-      if (conditional) state.runsEtag = response.headers.get("ETag");
       if (!response.ok) {
         let detail;
         try {
@@ -171,9 +178,7 @@
   }
   function updateBadges() {
     $("#library-count").textContent = state.assetTotal;
-    $("#run-count").textContent = state.runs.filter((r) =>
-      ["AGUARDANDO", "PROCESSANDO"].includes(r.status),
-    ).length;
+    $("#run-count").textContent = state.activeRuns;
   }
   const titles = {
     studio: [
@@ -212,6 +217,7 @@
     render();
     if (page === "automation") loadAutomation().catch((e) => toast(e.message));
     if (page === "library") loadLibrary(state.libraryOffset);
+    if (page === "runs") poll();
     window.forgeMotionOnRender?.(page);
     $("#view").focus({ preventScroll: true });
   }
@@ -232,12 +238,15 @@
         ? "<span>＋</span> Importar ICC"
         : "<span>＋</span> Importar artes";
     $("#page-content").innerHTML =
-      `${state.importing ? '<div class="upload-progress" role="status" id="upload-progress">Importando artes…</div>' : ""}${state.errors.length ? `<div class="import-errors" role="alert">${state.errors.map(esc).join("<br>")}<br><button class="button small subtle" data-action="dismiss-errors">Fechar avisos</button></div>` : ""}${state.page === "studio" ? studioMarkup() : state.page === "library" ? libraryMarkup() : state.page === "runs" ? '<div id="runs-list"></div>' : state.page === "automation" ? automationMarkup() : profilesMarkup()}`;
+      `${state.importing ? '<div class="upload-progress" role="status" id="upload-progress">Importando artes…</div>' : ""}${state.errors.length ? `<div class="import-errors" role="alert">${state.errors.map(esc).join("<br>")}<br><button class="button small subtle" data-action="dismiss-errors">Fechar avisos</button></div>` : ""}${state.page === "studio" ? studioMarkup() : state.page === "library" ? libraryMarkup() : state.page === "runs" ? '<div class="search-toolbar"><input type="search" id="run-search" placeholder="Buscar por nome ou ID do trabalho…" aria-label="Buscar rasterizações" /><span id="runs-total"></span></div><div id="runs-list"></div><div id="runs-pagination"></div>' : state.page === "automation" ? automationMarkup() : profilesMarkup()}`;
     if (state.page === "studio") {
       paintLayout();
       updateGenerate();
     }
-    if (state.page === "runs") renderRuns();
+    if (state.page === "runs") {
+      $("#run-search").value = state.runSearch;
+      renderRuns();
+    }
     updateBadges();
   }
   function field(key, label, unit, extra = "") {
@@ -388,9 +397,54 @@ ${field("max_page_length_mm", "Comprimento máximo por página", "mm", 'min="50"
   function profilesMarkup() {
     return `<div class="guide-panel"><strong>Perfis ligados à sua produção.</strong><br>Um ICC CMYK descreve a resposta de cor da combinação de impressora, tinta, filme e processo. Use o perfil fornecido ou medido para sua operação. Sem ICC CMYK, o Fluxo exporta a cor em sRGB com transparência e a máscara branca independente.</div><div class="profile-grid"><article class="profile-card"><div class="profile-icon">◉</div><h3>sRGB + branco</h3><p>Saída padrão, com transparência. A conversão final de cor fica a cargo do RIP de impressão.</p><span class="status-tag CONCLUIDO">DISPONÍVEL</span></article>${state.profiles.map((p) => `<article class="profile-card"><div class="profile-icon">◉</div><h3>${esc(p.name)}</h3><p>ICC de saída CMYK · validado pelo LittleCMS.<br>O perfil não substitui a calibração física.</p><code>SHA-256<br>${esc(p.sha256)}</code></article>`).join("")}<article class="profile-card"><div class="profile-icon" style="color:var(--cyan)">＋</div><h3>Seu perfil CMYK</h3><p>Importe um arquivo .icc ou .icm de até 4 MB.</p><button class="button small" data-action="import-icc">Importar perfil ICC</button></article></div>`;
   }
+  function mergeRuns(records) {
+    records.forEach((run) => state.runCache.set(run.id, run));
+  }
+  function runQuery() {
+    return `q=${encodeURIComponent(state.runSearch)}&offset=${state.runsOffset}&limit=20`;
+  }
+  async function fetchRuns(conditional = true) {
+    const query = runQuery();
+    const rows = await api(`/api/studio/runs?${query}`, {
+      conditional,
+      cache: "no-store",
+      headers:
+        conditional && state.runsEtag
+          ? { "If-None-Match": state.runsEtag }
+          : {},
+      onResponse(response) {
+        if (query === runQuery()) {
+          state.runsEtag = response.headers.get("ETag");
+          state.runsTotal = Number(response.headers.get("X-Total-Count") || 0);
+          state.activeRuns = Number(
+            response.headers.get("X-Active-Count") || 0,
+          );
+        }
+      },
+    });
+    if (query !== runQuery()) return null;
+    if (rows) mergeRuns(rows);
+    return rows;
+  }
+  function changeRunPage(offset) {
+    state.runsOffset = offset;
+    state.runsEtag = null;
+    state.runsLoading = true;
+    state.runs = [];
+    renderRuns();
+    poll();
+  }
   function renderRuns() {
     const target = $("#runs-list");
     if (!target) return;
+    $("#runs-total").textContent = `${state.runsTotal} trabalhos`;
+    $("#runs-pagination").innerHTML =
+      `<div class="library-navigation"><span>${state.runsTotal ? state.runsOffset + 1 : 0}–${Math.min(state.runsOffset + 20, state.runsTotal)} de ${state.runsTotal}</span><div><button class="button small" data-run-offset="${Math.max(0, state.runsOffset - 20)}" ${state.runsOffset === 0 ? "disabled" : ""}>← Anterior</button><span>Página ${Math.floor(state.runsOffset / 20) + 1} de ${Math.max(1, Math.ceil(state.runsTotal / 20))}</span><button class="button small" data-run-offset="${state.runsOffset + 20}" ${state.runsOffset + 20 >= state.runsTotal ? "disabled" : ""}>Próxima →</button></div></div>`;
+    if (state.runsLoading) {
+      target.innerHTML =
+        '<div class="initial-loading" role="status">Buscando rasterizações…</div>';
+      return;
+    }
     target.innerHTML = state.runs.length
       ? state.runs
           .map(
@@ -398,7 +452,9 @@ ${field("max_page_length_mm", "Comprimento máximo por página", "mm", 'min="50"
               `<article class="job-card"><div class="job-heading"><div><h3>${esc(r.name)}</h3><small>${new Date(r.created_at + (/[Z+]/.test(r.created_at) ? "" : "Z")).toLocaleString("pt-BR")} · ${esc(r.id.slice(0, 8))} · ${r.request.dpi} DPI · ${r.request.mirror ? "espelhado" : "normal"}</small></div><span class="status-tag ${r.status}">${{ AGUARDANDO: "NA FILA", PROCESSANDO: "RASTERIZANDO", CONCLUIDO: "PACOTE PRONTO", CANCELADO: "CANCELADO", ERRO: "ERRO" }[r.status] || esc(r.status)}</span></div><div class="progress-track" role="progressbar" aria-label="Rasterização de ${esc(r.name)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${r.progress}"><div class="progress-bar" style="width:${r.progress}%"></div></div><div class="job-meta"><span>${esc(r.phase)} · ${r.progress}%${r.result ? ` · ${number(r.result.film_width_mm / 10)} × ${number(r.result.film_height_mm / 10)} cm · ${r.result.page_count || 1} página(s)` : ""}</span><div class="job-actions">${r.download_url ? `<button class="button small" data-proof="${r.id}">Conferir separações</button><a class="button small cyan" href="${r.download_url}" download>↓ Baixar pacote ZIP</a>` : ""}${["AGUARDANDO", "PROCESSANDO"].includes(r.status) ? `<button class="button small danger" data-cancel="${r.id}">Cancelar</button>` : `<button class="button small" data-reuse="${r.id}">Usar composição</button>`}</div></div>${r.error ? `<div class="job-error" role="alert">${esc(r.error)}</div>` : ""}</article>`,
           )
           .join("")
-      : '<div class="empty-page"><div class="empty-icon">≋</div><h2>O próximo fluxo começa com uma arte.</h2><p>Suas rasterizações e pacotes exportados aparecerão aqui. O progresso acompanha as etapas reais do processamento.</p><button class="button primary" data-action="prepare">Preparar meu primeiro filme →</button></div>';
+      : state.runSearch
+        ? '<div class="empty-page"><div class="empty-icon">≋</div><h2>Nenhuma rasterização encontrada.</h2><p>Tente outro nome ou o ID do trabalho.</p><button class="button" data-action="clear-run-search">Limpar busca</button></div>'
+        : '<div class="empty-page"><div class="empty-icon">≋</div><h2>O próximo fluxo começa com uma arte.</h2><p>Suas rasterizações e pacotes exportados aparecerão aqui. O progresso acompanha as etapas reais do processamento.</p><button class="button primary" data-action="prepare">Preparar meu primeiro filme →</button></div>';
   }
   function updateGenerate() {
     const button = $("#generate-button");
@@ -604,7 +660,7 @@ ${field("max_page_length_mm", "Comprimento máximo por página", "mm", 'min="50"
     }
   }
   function openProof(id) {
-    const run = state.runs.find((r) => r.id === id);
+    const run = state.runCache.get(id);
     if (!run?.download_url) return;
     state.proofRun = id;
     state.proofPage = 1;
@@ -612,7 +668,7 @@ ${field("max_page_length_mm", "Comprimento máximo por página", "mm", 'min="50"
     if (!$("#asset-dialog").open) $("#asset-dialog").showModal();
   }
   function paintProof() {
-    const run = state.runs.find((r) => r.id === state.proofRun);
+    const run = state.runCache.get(state.proofRun);
     if (!run) return;
     const count = run.result?.page_count || 1,
       page = state.proofPage;
@@ -637,6 +693,10 @@ ${field("max_page_length_mm", "Comprimento máximo por página", "mm", 'min="50"
     updateGenerate();
     try {
       const run = await post("/api/studio/runs", payload());
+      state.runsOffset = 0;
+      state.runSearch = "";
+      state.runsEtag = null;
+      mergeRuns([run]);
       state.runs.unshift(run);
       navigate("runs");
       toast("Composição adicionada à fila de rasterização.");
@@ -667,6 +727,8 @@ ${field("max_page_length_mm", "Comprimento máximo por página", "mm", 'min="50"
         state.proofPage = Number(button.dataset.proofPage);
         paintProof();
       }
+      if (button.dataset.runOffset !== undefined)
+        changeRunPage(Number(button.dataset.runOffset));
       if (button.dataset.libraryOffset !== undefined)
         loadLibrary(Number(button.dataset.libraryOffset));
       if (button.dataset.filmPage !== undefined) {
@@ -701,7 +763,7 @@ ${field("max_page_length_mm", "Comprimento máximo por página", "mm", 'min="50"
         await poll();
       }
       if (button.dataset.reuse) {
-        const run = state.runs.find((r) => r.id === button.dataset.reuse);
+        const run = state.runCache.get(button.dataset.reuse);
         state.settings = { ...defaults, ...run.request };
         delete state.settings.items;
         state.items = run.request.items.map((i) => ({ ...i }));
@@ -726,6 +788,11 @@ ${field("max_page_length_mm", "Comprimento máximo por página", "mm", 'min="50"
       }
       const action = button.dataset.action;
       if (action === "reconnect") await initializeData();
+      if (action === "clear-run-search") {
+        state.runSearch = "";
+        $("#run-search").value = "";
+        changeRunPage(0);
+      }
       if (action === "retry-automation") await loadAutomation(true);
       if (action === "retry-library") loadLibrary(state.libraryOffset);
       if (action === "import") $("#file-input").click();
@@ -788,6 +855,17 @@ ${field("max_page_length_mm", "Comprimento máximo por página", "mm", 'min="50"
   function updateInput(event) {
     const target = event.target;
     if (target.closest("#hotfolder-form")) state.automationDirty = true;
+    if (target.id === "run-search") {
+      state.runSearch = target.value;
+      state.runsOffset = 0;
+      state.runsEtag = null;
+      state.runsLoading = true;
+      state.runs = [];
+      renderRuns();
+      clearTimeout(runSearchTimer);
+      runSearchTimer = setTimeout(() => poll(), 250);
+      return;
+    }
     if (target.id === "library-search") {
       state.search = target.value;
       state.libraryBusy = true;
@@ -888,17 +966,22 @@ ${field("max_page_length_mm", "Comprimento máximo por página", "mm", 'min="50"
     if (pollBusy) return;
     pollBusy = true;
     try {
-      const runs = await api("/api/studio/runs", {
-        conditional: true,
-        cache: "no-store",
-        headers: state.runsEtag ? { "If-None-Match": state.runsEtag } : {},
-      });
+      const query = runQuery();
+      const wasLoading = state.runsLoading,
+        previousTotal = state.runsTotal;
+      const runs = await fetchRuns();
+      if (query !== runQuery()) return;
+      state.runsLoading = false;
       const changed =
         runs !== null && JSON.stringify(runs) !== JSON.stringify(state.runs);
       if (runs !== null) state.runs = runs;
       setOnline(true);
       updateBadges();
-      if (changed && state.page === "runs") renderRuns();
+      if (
+        (changed || wasLoading || previousTotal !== state.runsTotal) &&
+        state.page === "runs"
+      )
+        renderRuns();
       if (!state.initialized && !state.initializing) {
         await initializeData();
         return;
@@ -940,14 +1023,15 @@ ${field("max_page_length_mm", "Comprimento máximo por página", "mm", 'min="50"
       const [library, profiles, runs] = await Promise.all([
         api("/api/studio/library?limit=32"),
         api("/api/studio/profiles"),
-        api("/api/studio/runs"),
+        fetchRuns(false),
       ]);
       mergeAssets(library.items);
       state.libraryItems = library.items;
       state.libraryTotal = library.total;
       state.assetTotal = library.total;
       state.profiles = profiles;
-      state.runs = runs;
+      state.runs = runs || [];
+      state.runsLoading = false;
       await ensureAssets(state.items.map((i) => i.asset_id));
       const lost = state.items.filter((i) => !asset(i.asset_id)).length;
       state.items = state.items.filter((i) => asset(i.asset_id));

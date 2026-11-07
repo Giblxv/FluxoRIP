@@ -15,6 +15,7 @@ Preparação automática de imagens para DTF, com interface em português, compo
 - Branco derivado do alfa, com cobertura de 0–100% e recuo da borda de 0–1 mm.
 - Conversão de perfis RGB incorporados para sRGB e saída CMYK quando um ICC CMYK válido é fornecido pelo operador. O branco continua como máscara independente.
 - Provas reduzidas dos rasters finais de cor e branco, com download individual de cada separação por página.
+- Histórico de rasterizações com busca por nome/ID e paginação em todo o acervo, mantendo o contador global de trabalhos ativos.
 - Fila persistente, processamento sequencial fora da requisição HTTP, progresso por etapas reais, cancelamento, histórico e reutilização da composição.
 - Pasta automática opcional: aguarda estabilidade por pelo menos seis segundos, importa uma vez cada versão do arquivo e gera um pacote por imagem.
 - Fontes Archivo/Public Sans incluídas com licença OFL, sem carregamento externo no Studio.

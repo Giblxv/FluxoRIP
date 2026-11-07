@@ -23,7 +23,7 @@ from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, Upl
 from fastapi.responses import FileResponse, Response, StreamingResponse
 from PIL import Image, ImageChops, ImageCms, ImageFilter, ImageOps
 from pydantic import BaseModel, ConfigDict, Field
-from sqlalchemy import DateTime, Integer, String, Text, func, select, update
+from sqlalchemy import DateTime, Integer, String, Text, func, or_, select, update
 from sqlalchemy.orm import Mapped, Session, mapped_column
 
 from app.art_editor import ArtRevision, file_path, get_row, load_image, row_dict
@@ -531,8 +531,28 @@ def run_info(row):
 
 
 @router.get("/runs")
-def runs(request: Request, response: Response, db: Session = Depends(get_db)):
-    # Poll state cheaply. Layouts are immutable after a terminal transition.
+def runs(
+    request: Request,
+    response: Response,
+    q: str = Query("", max_length=255),
+    offset: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=100),
+    db: Session = Depends(get_db),
+):
+    filters = []
+    if q.strip():
+        filters.append(
+            or_(
+                func.fluxo_search(DtfRun.name).contains(
+                    normalize_search(q.strip()), autoescape=True
+                ),
+                DtfRun.id.contains(q.strip(), autoescape=True),
+            )
+        )
+    total = db.scalar(select(func.count()).select_from(DtfRun).where(*filters))
+    active = db.scalar(
+        select(func.count()).select_from(DtfRun).where(DtfRun.status.in_(ACTIVE))
+    )
     signatures = db.execute(
         select(
             DtfRun.id,
@@ -542,21 +562,34 @@ def runs(request: Request, response: Response, db: Session = Depends(get_db)):
             DtfRun.error,
             DtfRun.finished_at,
         )
+        .where(*filters)
         .order_by(DtfRun.created_at.desc(), DtfRun.id)
-        .limit(100)
+        .offset(offset)
+        .limit(limit)
     ).all()
     digest = hashlib.sha256(
-        repr([tuple(row) for row in signatures]).encode()
+        repr(
+            (q, offset, limit, total, active, [tuple(row) for row in signatures])
+        ).encode()
     ).hexdigest()
     etag = f'"{digest}"'
-    headers = {"ETag": etag, "Cache-Control": "private, no-cache"}
+    headers = {
+        "ETag": etag,
+        "Cache-Control": "private, no-cache",
+        "X-Total-Count": str(total),
+        "X-Active-Count": str(active),
+    }
     if request.headers.get("if-none-match") == etag:
         return Response(status_code=304, headers=headers)
     response.headers.update(headers)
     return [
         run_info(r)
         for r in db.scalars(
-            select(DtfRun).order_by(DtfRun.created_at.desc(), DtfRun.id).limit(100)
+            select(DtfRun)
+            .where(*filters)
+            .order_by(DtfRun.created_at.desc(), DtfRun.id)
+            .offset(offset)
+            .limit(limit)
         ).all()
     ]
 

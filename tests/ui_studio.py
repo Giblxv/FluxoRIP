@@ -232,7 +232,9 @@ def main():
                     page.get_by_role(
                         "button", name="Conferir separações", exact=True
                     ).first.click()
-                    page.get_by_role("button", name="Próxima", exact=False).click()
+                    page.locator("#asset-dialog-content").get_by_role(
+                        "button", name="Próxima", exact=False
+                    ).click()
                     expect(page.locator(".proof-pagination")).to_contain_text(
                         "Página 2"
                     )
@@ -302,6 +304,19 @@ def main():
                     expect(page.locator(".automation-panel .status-tag")).to_have_text(
                         "DESATIVADA"
                     )
+                    page.locator("[data-page=runs]").click()
+                    page.locator("#run-search").fill("Auto")
+                    expect(page.locator(".job-card")).to_have_count(1)
+                    expect(page.locator(".job-heading h3")).to_contain_text("Auto")
+                    page.locator("#run-search").fill("inexistente-987xyz")
+                    expect(page.locator(".job-card")).to_have_count(0)
+                    expect(
+                        page.get_by_role(
+                            "heading", name="Nenhuma rasterização encontrada."
+                        )
+                    ).to_be_visible()
+                    page.get_by_role("button", name="Limpar busca", exact=True).click()
+                    expect(page.locator(".job-card")).to_have_count(3)
                     # Real library pagination and restoring drafts older than the initial page.
                     tiny = io.BytesIO()
                     Image.new("RGBA", (16, 16), (0, 166, 214, 255)).save(tiny, "PNG")

@@ -18,7 +18,7 @@ A fila registra progresso em etapas realmente concluídas. O cancelamento usa at
 
 | Verificação | Resultado |
 | --- | --- |
-| `python -m unittest discover -s tests -v`, com ICC de teste local | **61 testes aprovados** |
+| `python -m unittest discover -s tests -v`, com ICC de teste local | **63 testes aprovados** |
 | Exportação CMYK real | Testada com `/usr/share/color/icc/ghostscript/default_cmyk.icc`; apenas perfil genérico para testar a transformação, não para recomendar cores de produção |
 | Os mesmos testes sem ICC externo | O teste opcional de exportação CMYK é ignorado; os demais não dependem de perfis externos |
 | `python tests/smoke_http.py` | API HTTP real aprovada; regressão das associações administrativas preservada |
@@ -65,3 +65,5 @@ Consulte os comandos em `README.md`, `requirements-test.txt` e `.github/workflow
 - O autoteste raster opcional do EXE usa dados temporários e verifica três páginas, máscara branca e TIFF no aplicativo empacotado. A compilação aguarda os testes de backend e navegador.
 
 As fontes Archivo e Public Sans são empacotadas localmente com licenças OFL. O teste de navegador bloqueia HTTPS externo e verifica que o Studio não tenta carregar recursos externos; as fontes e a interface continuam disponíveis na rede local.
+
+O histórico de rasterizações também é paginado e pesquisável por nome ou ID. Os testes criam 105 trabalhos sintéticos e recuperam registros fora dos primeiros 100; o contador de trabalhos ativos é global, independente do filtro/página. ETags incluem os parâmetros de consulta para evitar respostas vazias incorretamente reutilizadas entre páginas.

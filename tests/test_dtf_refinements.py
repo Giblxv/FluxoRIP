@@ -351,6 +351,64 @@ class DtfRefinementTests(unittest.TestCase):
         self.assertNotEqual(changed.headers["ETag"], etag)
         self.client.post(f"/api/studio/runs/{pending_id}/cancel")
 
+    def test_history_pagination_finds_runs_older_than_first_hundred(self):
+        prefix = uuid.uuid4().hex
+        with SessionLocal() as db:
+            for index in range(105):
+                db.add(
+                    DtfRun(
+                        id=str(uuid.uuid4()),
+                        name=f"{prefix} Histórico São {index:03d}",
+                        status="CONCLUIDO",
+                        request_json='{"items":[]}',
+                    )
+                )
+            db.commit()
+        try:
+            response = self.client.get(
+                "/api/studio/runs", params={"q": prefix, "offset": 100, "limit": 20}
+            )
+            self.assertEqual(response.status_code, 200, response.text)
+            self.assertEqual(response.headers["X-Total-Count"], "105")
+            self.assertEqual(len(response.json()), 5)
+            normalized = self.client.get(
+                "/api/studio/runs", params={"q": f"{prefix} historico sao 000"}
+            )
+            self.assertEqual(normalized.headers["X-Total-Count"], "1")
+            self.assertEqual(
+                normalized.json()[0]["name"], f"{prefix} Histórico São 000"
+            )
+            by_id = self.client.get(
+                "/api/studio/runs", params={"q": normalized.json()[0]["id"][:12]}
+            )
+            self.assertEqual(by_id.json()[0]["id"], normalized.json()[0]["id"])
+        finally:
+            with SessionLocal() as db:
+                db.execute(delete(DtfRun).where(DtfRun.name.startswith(prefix)))
+                db.commit()
+
+    def test_history_etags_are_specific_to_query_and_page(self):
+        q = uuid.uuid4().hex
+        first = self.client.get(
+            "/api/studio/runs", params={"q": q, "offset": 0, "limit": 20}
+        )
+        tag = first.headers["ETag"]
+        same = self.client.get(
+            "/api/studio/runs",
+            params={"q": q, "offset": 0, "limit": 20},
+            headers={"If-None-Match": tag},
+        )
+        self.assertEqual(same.status_code, 304)
+        different = self.client.get(
+            "/api/studio/runs",
+            params={"q": q, "offset": 20, "limit": 20},
+            headers={"If-None-Match": tag},
+        )
+        self.assertEqual(different.status_code, 200)
+        self.assertEqual(different.json(), [])
+        self.assertNotEqual(different.headers["ETag"], tag)
+        self.assertIn("X-Active-Count", different.headers)
+
     def test_multi_frame_input_is_not_silently_reduced_to_first_page(self):
         buffer = io.BytesIO()
         first = Image.new("RGB", (16, 16), "red")
