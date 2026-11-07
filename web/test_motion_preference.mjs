@@ -10,6 +10,7 @@ function harness({legacy=false, stored=null}={}) {
   const classes=new Set();
   const ripple={removed:false,remove(){this.removed=true;}};
   const keypress={classes:new Set(['fx-keypress']),classList:{remove(name){keypress.classes.delete(name);}}};
+  const pressable={classes:new Set(['fx-pressable']),classList:{remove(name){pressable.classes.delete(name);}}};
   const label={textContent:""};
   const toggle={
     disabled:false, title:"", attributes:{},
@@ -30,6 +31,7 @@ function harness({legacy=false, stored=null}={}) {
     querySelectorAll(selector){
       if(selector==='.fx-ripple')return [ripple];
       if(selector==='.fx-keypress')return keypress.classes.has('fx-keypress')?[keypress]:[];
+      if(selector==='.fx-pressable')return pressable.classes.has('fx-pressable')?[pressable]:[];
       throw Error('unexpected selector '+selector);
     },
     getElementById(id){return id==="motion-toggle"?toggle:null;},
@@ -45,7 +47,7 @@ function harness({legacy=false, stored=null}={}) {
     setTimeout(){}, // No ripple effects triggered.
   },{timeout:1000});
   return {
-    query,classes,toggle,label,storage,ripple,keypress,
+    query,classes,toggle,label,storage,ripple,keypress,pressable,
     change(value){query.matches=value;listeners.change();},
     click(){listeners.click({target:{closest(selector){
       assert.equal(selector,"#motion-toggle");
@@ -61,6 +63,7 @@ for(const legacy of [false,true]){
   app.change(true);
   assert.equal(app.ripple.removed,true,'in-flight ripple removed immediately');
   assert.equal(app.keypress.classes.has('fx-keypress'),false,'keypress effect removed immediately');
+  assert.equal(app.pressable.classes.has('fx-pressable'),false,'pressed marker removed immediately');
   assert.equal(app.label.textContent,"MOV. REDUZIDO");
   assert.equal(app.toggle.disabled,true);
   assert.equal(app.toggle.attributes["aria-pressed"],"false");
