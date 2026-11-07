@@ -3,10 +3,11 @@
 Esta ferramenta consulta informações do Windows para investigar uma integração com a instalação em execução. Não precisa do IP da impressora nem de Python.
 
 1. Extraia todos os arquivos do ZIP para uma pasta no computador usado na impressão.
-2. Deixe PrintExp e FlexiPRINT / Production Manager abertos normalmente. Para investigar a importação, abra manualmente a janela **OpenFiles / Abrir arquivo** do PrintExp e mantenha-a aberta, sem selecionar ou confirmar nenhum arquivo.
-3. Abra `EXECUTAR_DIAGNOSTICO.cmd`.
-4. Escolha uma pasta para salvar o resultado. Será criada uma subpasta nova `FluxoRIP-Diagnostico-...` com `diagnostico.json`.
-5. Revise o JSON e coloque essa subpasta na pasta **RIP** do seu Drive. Informe no chat quando estiver disponível.
+2. Aguarde a impressão atual terminar normalmente e deixe PrintExp e FlexiPRINT / Production Manager abertos. Esta coleta deve ocorrer com a operação ociosa; não é necessário interromper um trabalho.
+3. No PrintExp, use a opção com que você costuma escolher um PRT/PRN (**OpenFiles / Abrir arquivo**). Mantenha a janela de seleção aberta, sem confirmar a abertura de nenhum arquivo nem iniciar impressão.
+4. Abra `EXECUTAR_DIAGNOSTICO.cmd`, mantendo essa janela de seleção do PrintExp aberta.
+5. Escolha uma pasta para salvar o resultado. Será criada uma subpasta nova `FluxoRIP-Diagnostico-...` com `diagnostico.json`.
+6. Revise o JSON e envie o arquivo no chat ou coloque essa subpasta na pasta **RIP** do seu Drive. Informe no chat quando estiver disponível.
 
 O diagnóstico lê versões dos processos correspondentes, tipos de controles de acessibilidade, identificadores e estilos de controles Win32, associações de abertura de PRT/PRN e conexões TCP que esses processos já possuem. Não abre conexões, transmite comandos, inicia o PrintExp, clica em controles, abre trabalhos, altera o registro ou lê artes e parâmetros de máquina.
 
